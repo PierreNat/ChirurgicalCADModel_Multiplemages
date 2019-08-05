@@ -5,14 +5,15 @@ script to train a resnet 50 network only with n epoch
 rendering directly after each parameter estimation
 """
 import torch
+import argparse
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
-from utils_functions.resnet50 import resnet50
-from utils_functions.train_val_render import train_render
+from utils_functions.MyResnet import Myresnet50
+from utils_functions.train_val_renderV2 import train_renderV2
 from utils_functions.cubeDataset import CubeDataset
 
 # device = torch.device('cpu')
@@ -20,7 +21,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Body_10000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Body_5000dataset'  # choose the corresponding database to use
 
 batch_size = 4
 
@@ -39,10 +40,7 @@ cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the docum
 
 date4File = '071819_{}'.format(fileExtension) #mmddyy
 
-obj_name = 'wrist'
-
-#the following line is used to recall resnet parameter
-# modelName = '070519_part2_30epochs_TempModel_train_cubes_wrist_10000_Rt_batchsOf7img_0.0%noise_epochs_n8_part2_30epochs_RenderRegr'
+obj_name = 'AllTool'
 
 
 cubes = np.load(cubes_file)
@@ -82,25 +80,25 @@ val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, nu
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 
-for image, sil, param in train_dataloader:
-
-#plot silhouette
-    print(image.size(), sil.size(), param.size()) #torch.Size([batch, 3, 512, 512]) torch.Size([batch, 6])
-    im = 0
-    print(param[im])  # parameter in form tensor([2.5508, 0.0000, 0.0000, 0.0000, 0.0000, 5.0000])
-
-    image2show = image[im]  # indexing random  one image
-    print(image2show.size()) #torch.Size([3, 512, 512])
-    plt.imshow((image2show * 0.5 + 0.5).numpy().transpose(1, 2, 0))
-    plt.show()
-
-    image2show = sil[im]  # indexing random  one image
-    print(image2show.size())  # torch.Size([3, 512, 512])
-    image2show = image2show.numpy()
-    plt.imshow(image2show, cmap='gray')
-    plt.show()
-
-    break  # break here just to show 1 batch of data
+# for image, sil, param in train_dataloader:
+#
+# #plot silhouette
+#     print(image.size(), sil.size(), param.size()) #torch.Size([batch, 3, 512, 512]) torch.Size([batch, 6])
+#     im = 0
+#     print(param[im])  # parameter in form tensor([2.5508, 0.0000, 0.0000, 0.0000, 0.0000, 5.0000])
+#
+#     image2show = image[im]  # indexing random  one image
+#     print(image2show.size()) #torch.Size([3, 512, 512])
+#     plt.imshow((image2show * 0.5 + 0.5).numpy().transpose(1, 2, 0))
+#     plt.show()
+#
+#     image2show = sil[im]  # indexing random  one image
+#     print(image2show.size())  # torch.Size([3, 512, 512])
+#     image2show = image2show.numpy()
+#     plt.imshow(image2show, cmap='gray')
+#     plt.show()
+#
+#     break  # break here just to show 1 batch of data
 
 #  ------------------------------------------------------------------
 # Setup the model
@@ -110,15 +108,28 @@ data_dir = os.path.join(current_dir, 'data')
 
 
 noise = 0.0
-# model = resnet50(cifar=False, modelName=modelName) #train with the saved model from the training script
-model = resnet50(cifar=True) #train with the pretrained parameter from cifar database
-# model = resnet50_multCPU(cifar=True)
-model = model.to(device)  # transfer the neural net onto the GPU
-criterion = nn.MSELoss()  #nn.BCELoss()   #nn.CrossEntropyLoss()  define the loss (MSE, Crossentropy, Binarycrossentropy)
+parser = argparse.ArgumentParser()
+parser.add_argument('-io', '--filename_obj', type=str, default=os.path.join(data_dir, '{}.obj'.format(obj_name)))
+parser.add_argument('-ir', '--filename_ref', type=str,default=os.path.join(data_dir, 'wrist1im_BodyR2_ref.png'))  # image result to target
+parser.add_argument('-in', '--filename_init', type=str, default=os.path.join(data_dir, 'example5_inT.png'))  # image to init resnet with regression
+parser.add_argument('-or', '--filename_output', type=str,default=os.path.join(data_dir, 'example5_resultR_render_1.gif'))
+parser.add_argument('-mr', '--make_reference_image', type=int, default=0)
+parser.add_argument('-g', '--gpu', type=int, default=0)
+args = parser.parse_args()
+
+model = Myresnet50(filename_obj=args.filename_obj, filename_ref=args.filename_ref, filename_init=args.filename_init)
+
+model.to(device)
+
+model.train(True)
+bool_first = True
+lr = 0.001
+
+criterion = nn.BCELoss()  #nn.BCELoss()   #nn.CrossEntropyLoss()  define the loss (MSE, Crossentropy, Binarycrossentropy)
 #
 #  ------------------------------------------------------------------
 
-train_losses = train_render(model, train_dataloader, test_dataloader,
+train_renderV2(model, train_dataloader, test_dataloader,
                                         n_epochs, criterion,
                                         date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise)
 

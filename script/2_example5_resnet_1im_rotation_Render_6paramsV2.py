@@ -6,8 +6,6 @@ import argparse
 import glob
 from torch.utils.data import Dataset
 from scipy.spatial.transform.rotation import Rotation as Rot
-import torch
-import math as m
 import torch.nn as nn
 import numpy as np
 from skimage.io import imread, imsave
@@ -16,7 +14,6 @@ import imageio
 import time
 from torch.autograd import Variable
 import torch
-import torchvision.models as models
 from torchvision.models.resnet import ResNet, Bottleneck
 import torchvision.models as models
 import torchgeometry as tgm #from https://torchgeometry.readthedocs.io/en/v0.1.2/_modules/torchgeometry/core/homography_warper.html

@@ -150,19 +150,12 @@ class ModelResNet50(ResNet):
         t = np.repeat(t[np.newaxis, :], 1, axis=0)  # shape of [1, 3]
 
         self.K = K
-        # self.R = nn.Parameter(torch.from_numpy(np.array(R, dtype=np.float32)))
         self.R = R
-        # print(R)
-        # self.Rx
-        # self.Ry
-        # self.Rz
-        # quaternion notation?
         # -------------------------- working block translation
         self.tx = torch.from_numpy(np.array(x, dtype=np.float32)).cuda()
         self.ty = torch.from_numpy(np.array(y, dtype=np.float32)).cuda()
         self.tz = torch.from_numpy(np.array(z, dtype=np.float32)).cuda()
         self.t =torch.from_numpy(np.array([self.tx, self.ty, self.tz], dtype=np.float32)).unsqueeze(0)
-        # self.t = nn.Parameter(torch.from_numpy(np.array([self.tx, self.ty, self.tz], dtype=np.float32)).unsqueeze(0))
 
         # --------------------------
 
