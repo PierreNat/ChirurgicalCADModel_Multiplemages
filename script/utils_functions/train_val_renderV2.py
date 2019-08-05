@@ -20,6 +20,8 @@ def train_renderV2(model, train_dataloader, test_dataloader,
     Step_losses = []
     Epoch_losses = []
     count = 0
+
+
     for epoch in tqdm(range(n_epochs)):
 
         ## Training phase
@@ -27,6 +29,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
         print('train phase epoch {}'.format(epoch))
 
         for image, silhouette, parameter in train_dataloader:
+            loss = 0
             Step_loss = 0
             numbOfImage = image.size()[0]
             image = image.to(device)
@@ -52,29 +55,40 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                 # print(current_GT_sil)
                 if (model.t[2] > 1 and model.t[2] < 10 and torch.abs(model.t[0]) < 1.5 and torch.abs(model.t[1]) < 1.5):
                     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-                    loss = nn.BCELoss()(current_sil, current_GT_sil)
+                    loss  +=  nn.BCELoss()(current_sil, current_GT_sil)
                     print('render')
                 else:
                     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-                    loss = nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
+                    loss  +=  nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
                     print('regression')
-                Step_loss = Step_loss + loss
+
+            loss = loss/numbOfImage #take the mean of the step loss
 
 
             optimizer.zero_grad()
-            Step_loss.backward()
+            loss.backward()
             optimizer.step()
-            print(Step_loss)
-            Step_losses.append(Step_loss.detach().cpu().numpy())
+            print(loss)
+            Step_losses.append(loss.detach().cpu().numpy())
             count = count+1
+
+        Epoch_losses.append(np.mean(Step_losses))
 
     fig, (p1, p2, p3) = plt.subplots(3, figsize=(15,10)) #largeur hauteur
 
-    p1.plot(np.arange(count), Step_losses, label="Global Loss")
+    p1.plot(np.arange(count), Step_losses, label="step Loss")
     p1.set( ylabel='BCE Loss')
-    p1.set_ylim([0, 20])
+    p1.set_ylim([0, 5])
     # Place a legend to the right of this smaller subplot.
     p1.legend()
+
+    p2.plot(np.arange(n_epochs), Epoch_losses, label="epoch Loss")
+    p2.set( ylabel='BCE Loss')
+    p2.set_ylim([0, 5])
+    # Place a legend to the right of this smaller subplot.
+    p2.legend()
+
+
 
     plt.show()
 
