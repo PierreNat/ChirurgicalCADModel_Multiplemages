@@ -5,6 +5,7 @@ script to train a resnet 50 network only with n epoch
 rendering directly after each parameter estimation
 """
 import torch
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
@@ -19,11 +20,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'OneCenteredImage'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Body_10000dataset'  # choose the corresponding database to use
 
-batch_size = 1
+batch_size = 4
 
-n_epochs = 100
+n_epochs = 1
 
 target_size = (512, 512)
 
@@ -32,7 +33,7 @@ cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-fileExtension = 'oneImageTestConvergence' #string to ad at the end of the file
+fileExtension = 'MultipleTestConvergence' #string to ad at the end of the file
 
 cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the document name
 
@@ -102,8 +103,12 @@ for image, sil, param in train_dataloader:
     break  # break here just to show 1 batch of data
 
 #  ------------------------------------------------------------------
+# Setup the model
 
-# for noise in np.arange(0, 1, 0.1):
+current_dir = os.path.dirname(os.path.realpath(__file__))
+data_dir = os.path.join(current_dir, 'data')
+
+
 noise = 0.0
 # model = resnet50(cifar=False, modelName=modelName) #train with the saved model from the training script
 model = resnet50(cifar=True) #train with the pretrained parameter from cifar database
