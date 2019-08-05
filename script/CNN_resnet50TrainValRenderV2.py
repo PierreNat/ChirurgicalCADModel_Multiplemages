@@ -21,11 +21,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Body_5000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Body_20dataset'  # choose the corresponding database to use
 
 batch_size = 4
 
-n_epochs = 1
+n_epochs = 20
 
 target_size = (512, 512)
 
@@ -38,7 +38,7 @@ fileExtension = 'MultipleTestConvergence' #string to ad at the end of the file
 
 cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the document name
 
-date4File = '071819_{}'.format(fileExtension) #mmddyy
+date4File = '080519_{}'.format(fileExtension) #mmddyy
 
 obj_name = 'AllTool'
 
@@ -49,21 +49,26 @@ params = np.load(parameters_file)
 
 #  ------------------------------------------------------------------
 
-ratio = 0.9  # 90%training 10%validation
-split = int(len(cubes)*0.9)
-test_length = 1000
+ratio = 1  # 90%training 10%validation
+split = int(len(cubes)*ratio)
+test_length = 10
 
-train_im = cubes  # 90% training
-train_sil = sils
-train_param = params
+train_im = cubes[:split]  # 90% training
+train_sil = sils[:split]
+train_param = params[:split]
 
-val_im = train_im   # remaining ratio for validation
-val_sil = train_sil
-val_param = train_param
+# val_im = cubes[split:]  # remaining ratio for validation
+# val_sil = sils[split:]
+# val_param = params[split:]
 
-test_im = train_im
-test_sil = train_sil
-test_param = train_param
+val_im = cubes[:test_length]  # remaining ratio for validation
+val_sil = sils[:test_length]
+val_param = params[:test_length]
+
+test_im = cubes[:test_length]
+test_sil = sils[:test_length]
+test_param = params[:test_length]
+
 
 #  ------------------------------------------------------------------
 

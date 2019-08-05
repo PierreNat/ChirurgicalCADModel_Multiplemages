@@ -17,18 +17,18 @@ def train_renderV2(model, train_dataloader, test_dataloader,
     lr = 0.001
 
     loop = n_epochs
-    losses = []
+    Step_losses = []
+    Epoch_losses = []
     count = 0
     for epoch in tqdm(range(n_epochs)):
 
         ## Training phase
         model.train()
-
-
         print('train phase epoch {}'.format(epoch))
 
         for image, silhouette, parameter in train_dataloader:
-            All_loss = 0
+            Step_loss = 0
+            numbOfImage = image.size()[0]
             image = image.to(device)
             parameter = parameter.to(device)
             silhouette = silhouette.to(device)
@@ -37,7 +37,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
             # print('computed parameters are {}'.format(params))
             # print(params.size())
 
-            for i in range(0,batch_size):
+            for i in range(0,numbOfImage):
                 #create and store silhouette
                 model.t = params[i, 3:6]
                 R = params[i, 0:3]
@@ -58,19 +58,19 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
                     loss = nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
                     print('regression')
-                All_loss = All_loss + loss
+                Step_loss = Step_loss + loss
 
 
             optimizer.zero_grad()
-            All_loss.backward()
+            Step_loss.backward()
             optimizer.step()
-            print(All_loss)
-            losses.append(All_loss.detach().cpu().numpy())
+            print(Step_loss)
+            Step_losses.append(Step_loss.detach().cpu().numpy())
             count = count+1
 
     fig, (p1, p2, p3) = plt.subplots(3, figsize=(15,10)) #largeur hauteur
 
-    p1.plot(np.arange(count), losses, label="Global Loss")
+    p1.plot(np.arange(count), Step_losses, label="Global Loss")
     p1.set( ylabel='BCE Loss')
     p1.set_ylim([0, 20])
     # Place a legend to the right of this smaller subplot.
