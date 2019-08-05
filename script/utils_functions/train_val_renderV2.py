@@ -46,10 +46,10 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                 model.R = R2Rmat(R)  # angle from resnet are in radian
                 # print(model.t)
                 # print(model.R)
-                current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t, mode='silhouettes')
-                print(current_sil)
-                current_GT_sil = silhouette[i]
-                print(current_GT_sil)
+                current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t, mode='silhouettes').squeeze()
+                # print(current_sil)
+                current_GT_sil = (silhouette[i]/255).type(torch.FloatTensor).to(device)
+                # print(current_GT_sil)
                 if (model.t[2] > 1 and model.t[2] < 10 and torch.abs(model.t[0]) < 1.5 and torch.abs(model.t[1]) < 1.5):
                     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
                     loss = nn.BCELoss()(current_sil, current_GT_sil)
@@ -72,7 +72,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
 
     p1.plot(np.arange(count), losses, label="Global Loss")
     p1.set( ylabel='BCE Loss')
-    p1.set_ylim([0, 10])
+    p1.set_ylim([0, 20])
     # Place a legend to the right of this smaller subplot.
     p1.legend()
 
