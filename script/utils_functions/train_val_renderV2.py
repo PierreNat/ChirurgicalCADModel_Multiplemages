@@ -14,12 +14,15 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                  n_epochs, loss_function,
                  date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise):
     # monitor loss functions as the training progresses
-    lr = 0.001
+    lr = 0.0001
 
     loop = n_epochs
     Step_losses = []
+    current_step_loss = []
     Epoch_losses = []
     count = 0
+    renderCount = 0
+    regressionCount = 0
 
 
     for epoch in tqdm(range(n_epochs)):
@@ -57,10 +60,12 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
                     loss  +=  nn.BCELoss()(current_sil, current_GT_sil)
                     print('render')
+                    renderCount += 1
                 else:
                     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
                     loss  +=  nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
                     print('regression')
+                    regressionCount += 1
 
             loss = loss/numbOfImage #take the mean of the step loss
 
@@ -69,10 +74,17 @@ def train_renderV2(model, train_dataloader, test_dataloader,
             loss.backward()
             optimizer.step()
             print(loss)
-            Step_losses.append(loss.detach().cpu().numpy())
+            Step_losses.append(loss.detach().cpu().numpy()) # contain all step value for all epoch
+            current_step_loss.append(loss.detach().cpu().numpy()) #contain only this epoch loss, will be reset after each epoch
             count = count+1
 
-        Epoch_losses.append(np.mean(Step_losses))
+        epochloss = np.mean(current_step_loss)
+        current_step_loss = []
+        Epoch_losses.append(epochloss) #most significant value to store
+        print(epochloss)
+        print(renderCount, regressionCount)
+        renderCount = 0
+        regressionCount = 0
 
     fig, (p1, p2, p3) = plt.subplots(3, figsize=(15,10)) #largeur hauteur
 
@@ -84,11 +96,19 @@ def train_renderV2(model, train_dataloader, test_dataloader,
 
     p2.plot(np.arange(n_epochs), Epoch_losses, label="epoch Loss")
     p2.set( ylabel='BCE Loss')
-    p2.set_ylim([0, 5])
+    p2.set_ylim([0, 10])
     # Place a legend to the right of this smaller subplot.
     p2.legend()
+    fig.savefig('results/render_{}batch_{}.pdf'.format(batch_size, n_epochs))
+    import matplotlib2tikz
 
-
-
+    matplotlib2tikz.save("results/render_{}batch_{}.tex".format(batch_size, n_epochs))
     plt.show()
+
+    #validation phase
+    model.eval()
+
+
+
+
 
