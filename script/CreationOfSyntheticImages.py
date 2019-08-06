@@ -29,11 +29,11 @@ def main():
     print(vertices_1.shape)
     print(faces_1.shape)
 
-    file_name_extension = 'wrist1im_Body_20dataset'
+    file_name_extension = 'wrist1im_Body_30dataset'
 
 
 
-    nb_im = 20
+    nb_im = 30
     #init and create renderer object
     R = np.array([np.radians(0), np.radians(0), np.radians(0)])  # angle in degree
     t = np.array([0, 0, 0])  # translation in meter
@@ -67,7 +67,6 @@ def main():
                             t=torch.cuda.FloatTensor(cam.t_vertices))  # [batch_size, RGB, image_size, image_size]
 
         image = images_1[0].detach().cpu().numpy()[0].transpose((1, 2, 0)) #float32 from 0-1
-
         image = (image*255).astype(np.uint8) #cast from float32 255.0 to 255 uint8
 
         sils_1 = renderer(vertices_1, faces_1, textures_1,
@@ -107,16 +106,16 @@ def main():
 
         # cubes_database.extend(image)
 
-        # if(im_nr%1 == 0):
-        #     fig = plt.figure()
-        #     fig.add_subplot(1, 2, 1)
-        #     plt.imshow(image)
-        #     imageio.imwrite("3D_objects/{}_ref.png".format(file_name_extension), image)
-        #
-        #     fig.add_subplot(1, 2, 2)
-        #     plt.imshow(sil, cmap='gray')
-        #     plt.show()
-        #     plt.close(fig)
+        if(im_nr%1 == 0):
+            fig = plt.figure()
+            fig.add_subplot(1, 2, 1)
+            plt.imshow(image)
+            imageio.imwrite("3D_objects/{}_ref.png".format(file_name_extension), image)
+
+            fig.add_subplot(1, 2, 2)
+            plt.imshow(sil, cmap='gray')
+            plt.show()
+            plt.close(fig)
 
 # save database
 # reshape in the form (nbr of image, x dim, y dim, layers)

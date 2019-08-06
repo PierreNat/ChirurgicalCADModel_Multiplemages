@@ -28,6 +28,8 @@ def train_renderV2(model, train_dataloader, test_dataloader,
     regressionCount = 0
     renderbar = []
     regressionbar = []
+    Im2ShowGT = []
+    Im2ShowGCP = []
     numbOfImageDataset = number_train_im
 
 
@@ -61,6 +63,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                 current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t, mode='silhouettes').squeeze()
                 # print(current_sil)
                 current_GT_sil = (silhouette[i]/255).type(torch.FloatTensor).to(device)
+
                 # print(current_GT_sil)
                 if (model.t[2] > 1 and model.t[2] < 10 and torch.abs(model.t[0]) < 1.5 and torch.abs(model.t[1]) < 1.5):
                     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -126,6 +129,30 @@ def train_renderV2(model, train_dataloader, test_dataloader,
 
                 loss += nn.BCELoss()(current_sil, current_GT_sil)
                 Test_Step_loss.append(loss.detach().cpu().numpy())
+                if(epoch == n_epochs-1):
+
+                    print('saving image to show')
+                    imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R,t=model.t)
+
+                    imgCP= imgCP.squeeze()  # float32 from 0-1
+                    imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
+                    imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
+                    imgGT = image[i].detach().cpu().numpy()
+                    imgGT = (imgGT * 0.5 + 0.5).transpose(1, 2, 0) #denormalization
+                    Im2ShowGT.append(imgCP)
+                    Im2ShowGCP.append(imgGT)
+
+                    a = plt.subplot(2, numbOfImage, i + 1)
+                    plt.imshow(imgGT)
+                    a.set_title('GT {}'.format(i))
+                    plt.xticks([0, 512])
+                    plt.yticks([])
+                    a = plt.subplot(2, numbOfImage, i + 1 + numbOfImage)
+                    plt.imshow(imgCP)
+                    a.set_title('Rdr {}'.format(i))
+                    plt.xticks([0, 512])
+                    plt.yticks([])
+
 
             loss = loss/numbOfImage
             Test_losses.append(loss.detach().cpu().numpy())
