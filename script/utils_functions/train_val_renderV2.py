@@ -23,6 +23,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
     Test_losses = []
     Epoch_losses = []
     count = 0
+    testcount = 0
     renderCount = 0
     regressionCount = 0
     renderbar = []
@@ -96,40 +97,40 @@ def train_renderV2(model, train_dataloader, test_dataloader,
 
 
 
-    #validation phase
-    print('test phase')
-    testcount = 0
-    model.eval()
+        #validation phase
+        print('test phase epoch {}'.format(epoch))
+
+        model.eval()
 
 
-    for image, silhouette, parameter in test_dataloader:
+        for image, silhouette, parameter in test_dataloader:
 
-        Test_Step_loss = []
-        numbOfImage = image.size()[0]
+            Test_Step_loss = []
+            numbOfImage = image.size()[0]
 
-        image = image.to(device)
-        parameter = parameter.to(device)
-        silhouette = silhouette.to(device)
+            image = image.to(device)
+            parameter = parameter.to(device)
+            silhouette = silhouette.to(device)
 
-        params = model(image)  # should be size [batchsize, 6]
-        # print('computed parameters are {}'.format(params))
-        # print(params.size())
+            params = model(image)  # should be size [batchsize, 6]
+            # print('computed parameters are {}'.format(params))
+            # print(params.size())
 
 
-        for i in range(0, numbOfImage):
-            model.t = params[i, 3:6]
-            R = params[i, 0:3]
-            model.R = R2Rmat(R)  # angle from resnet are in radian
-            current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t,mode='silhouettes').squeeze()
-            current_GT_sil = (silhouette[i] / 255).type(torch.FloatTensor).to(device)
+            for i in range(0, numbOfImage):
+                model.t = params[i, 3:6]
+                R = params[i, 0:3]
+                model.R = R2Rmat(R)  # angle from resnet are in radian
+                current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t,mode='silhouettes').squeeze()
+                current_GT_sil = (silhouette[i] / 255).type(torch.FloatTensor).to(device)
 
-            loss += nn.BCELoss()(current_sil, current_GT_sil)
-            Test_Step_loss.append(loss.detach().cpu().numpy())
+                loss += nn.BCELoss()(current_sil, current_GT_sil)
+                Test_Step_loss.append(loss.detach().cpu().numpy())
 
-        loss = loss/numbOfImage
-        Test_losses.append(loss.detach().cpu().numpy())
-        loss = 0        # reset current test loss
-        testcount = testcount+1
+            loss = loss/numbOfImage
+            Test_losses.append(loss.detach().cpu().numpy())
+            loss = 0        # reset current test loss
+            testcount = testcount+1
 
 
 

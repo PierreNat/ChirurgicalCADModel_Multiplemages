@@ -51,7 +51,7 @@ params = np.load(parameters_file)
 
 ratio = 1  # 90%training 10%validation
 split = int(len(cubes)*ratio)
-test_length = 10
+test_length = 4
 
 train_im = cubes[:split]  # 90% training
 train_sil = sils[:split]
