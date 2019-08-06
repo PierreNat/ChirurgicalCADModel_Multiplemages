@@ -21,11 +21,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Body_5000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Body_20dataset'  # choose the corresponding database to use
 
 batch_size = 4
 
-n_epochs = 10
+n_epochs = 5
 
 target_size = (512, 512)
 
@@ -38,7 +38,7 @@ fileExtension = 'MultipleTestConvergence' #string to ad at the end of the file
 
 cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the document name
 
-date4File = '080519_{}'.format(fileExtension) #mmddyy
+date4File = '080619_{}'.format(fileExtension) #mmddyy
 
 obj_name = 'AllTool'
 
@@ -56,6 +56,7 @@ test_length = 10
 train_im = cubes[:split]  # 90% training
 train_sil = sils[:split]
 train_param = params[:split]
+number_train_im = np.shape(train_im)[0]
 
 # val_im = cubes[split:]  # remaining ratio for validation
 # val_sil = sils[split:]
@@ -136,7 +137,7 @@ criterion = nn.BCELoss()  #nn.BCELoss()   #nn.CrossEntropyLoss()  define the los
 
 train_renderV2(model, train_dataloader, test_dataloader,
                                         n_epochs, criterion,
-                                        date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise)
+                                        date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise, number_train_im)
 
 #  ------------------------------------------------------------------
 
