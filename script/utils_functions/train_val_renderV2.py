@@ -147,8 +147,6 @@ def train_renderV2(model, train_dataloader, test_dataloader,
     # Place a legend to the right of this smaller subplot.
     p1.legend()
 
-
-
     #subplot 2
     p2.plot(np.arange(n_epochs), Epoch_losses, label="epoch Loss")
     p2.set( ylabel=' Mean of BCE training step loss')
@@ -170,7 +168,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
 
     p4.plot(np.arange(testcount), Test_losses, label="Test Loss")
     p4.set( ylabel='Mean of BCE test step loss')
-    p4.set_ylim([0, 20])
+    p4.set_ylim([0, 5])
     # Place a legend to the right of this smaller subplot.
     p4.legend()
 

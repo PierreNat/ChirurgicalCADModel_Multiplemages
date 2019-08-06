@@ -25,7 +25,7 @@ file_name_extension = 'wrist1im_Body_20dataset'  # choose the corresponding data
 
 batch_size = 4
 
-n_epochs = 4
+n_epochs = 20
 
 target_size = (512, 512)
 
