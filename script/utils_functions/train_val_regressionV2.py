@@ -36,10 +36,10 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
         ## Training phase
         model.train()
         print('train phase epoch {}'.format(epoch))
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
         for image, silhouette, parameter in train_dataloader:
-            loss = 0
-            Step_loss = 0
+
             numbOfImage = image.size()[0]
             image = image.to(device)
             parameter = parameter.to(device)
@@ -48,6 +48,7 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
             # print('computed parameters are {}'.format(params))
             # print(params.size())
 
+            optimizer.zero_grad()
             for i in range(0,numbOfImage):
                 #create and store silhouette
                 model.t = params[i, 3:6]
@@ -55,14 +56,13 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
 
                 model.R = R2Rmat(R)  # angle from resnet are in radian
 
-                optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
                 loss += nn.MSELoss()(params[i], parameter[i]).to(device)
                 regressionCount += 1
 
-            loss = loss/numbOfImage #take the mean of the step loss
+            # loss = loss/numbOfImage #take the mean of the step loss
 
 
-            optimizer.zero_grad()
+
             loss.backward()
             optimizer.step()
             print(loss)
@@ -127,7 +127,7 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
                     plt.yticks([])
 
 
-            loss = loss/numbOfImage
+            # loss = loss/numbOfImage
             Test_losses.append(loss.detach().cpu().numpy())
             loss = 0        # reset current test loss
             testcount = testcount+1

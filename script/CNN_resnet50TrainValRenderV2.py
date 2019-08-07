@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
 from utils_functions.MyResnet import Myresnet50
 from utils_functions.train_val_renderV2 import train_renderV2
+from utils_functions.train_val_renderV2_oneshot import train_renderV2_oneshot
 from utils_functions.cubeDataset import CubeDataset
 
 # device = torch.device('cpu')

@@ -8,31 +8,15 @@ import matplotlib.pyplot as plt
 from utils_functions.renderBatchItem import renderBatchSil
 from utils_functions.testRender import testRenderResnet
 from utils_functions.R2Rmat import R2Rmat
-import pandas as pd
-
-def RolAv(list, window = 2):
-
-    mylist = list
-    print(mylist)
-    N = window
-    cumsum, moving_aves = [0], []
-
-    for i, x in enumerate(mylist, 1):
-        cumsum.append(cumsum[i - 1] + x)
-        if i >= N:
-            moving_ave = (cumsum[i] - cumsum[i - N]) / N
-            # can do stuff with moving_ave here
-            moving_aves.append(moving_ave)
-
-    return moving_aves
 
 
 
-def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
+def train_renderV2_oneshot(model, train_dataloader, test_dataloader,
                  n_epochs, loss_function,
                  date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise, number_train_im):
     # monitor loss functions as the training progresses
     lr = 0.001
+
     loop = n_epochs
     Step_losses = []
     current_step_loss = []
@@ -40,8 +24,9 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
     Epoch_losses = []
     count = 0
     testcount = 0
+    renderCount = 0
     regressionCount = 0
-    regressionbar = []
+    renderbar = []
     regressionbar = []
     Im2ShowGT = []
     Im2ShowGCP = []
@@ -53,22 +38,51 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
         ## Training phase
         model.train()
         print('train phase epoch {}'.format(epoch))
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
         for image, silhouette, parameter in train_dataloader:
-
+            loss = 0
+            Step_loss = 0
+            numbOfImage = image.size()[0]
             image = image.to(device)
             parameter = parameter.to(device)
+            silhouette = silhouette.to(device)
 
             params = model(image) #should be size [batchsize, 6]
+            # print('computed parameters are {}'.format(params))
+            # print(params.size())
+
+            for i in range(0,numbOfImage):
+                #create and store silhouette
+                model.t = params[i, 3:6]
+                R = params[i, 0:3]
+                # print(R)
+                # print(model.t)
+                model.R = R2Rmat(R)  # angle from resnet are in radian
+                # print(model.t)
+                # print(model.R)
+                current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t, mode='silhouettes').squeeze()
+                # print(current_sil)
+                current_GT_sil = (silhouette[i]/255).type(torch.FloatTensor).to(device)
+
+                # print(current_GT_sil)
+                if (model.t[2] > 1 and model.t[2] < 10 and torch.abs(model.t[0]) < 1.5 and torch.abs(model.t[1]) < 1.5):
+                    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+                    loss  +=  nn.BCELoss()(current_sil, current_GT_sil)
+                    print('render')
+                    renderCount += 1
+                else:
+                    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+                    loss  +=  nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
+                    print('regression')
+                    regressionCount += 1
+
+            loss = loss/numbOfImage #take the mean of the step loss
+
 
             optimizer.zero_grad()
-            loss = nn.MSELoss()(params, parameter).to(device)
-
             loss.backward()
             optimizer.step()
             print(loss)
-
             Step_losses.append(loss.detach().cpu().numpy()) # contain all step value for all epoch
             current_step_loss.append(loss.detach().cpu().numpy()) #contain only this epoch loss, will be reset after each epoch
             count = count+1
@@ -77,6 +91,13 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
         current_step_loss = []
         Epoch_losses.append(epochloss) #most significant value to store
         print(epochloss)
+        print(renderCount, regressionCount)
+        renderbar.append(renderCount)
+        regressionbar.append(regressionCount)
+        renderCount = 0
+        regressionCount = 0
+
+
 
 
         #validation phase
@@ -92,20 +113,25 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
 
             image = image.to(device)
             parameter = parameter.to(device)
+            silhouette = silhouette.to(device)
+
             params = model(image)  # should be size [batchsize, 6]
+            # print('computed parameters are {}'.format(params))
+            # print(params.size())
 
 
-            loss = nn.MSELoss()(params, parameter).to(device)
-            Test_Step_loss.append(loss.detach().cpu().numpy())
+            for i in range(0, numbOfImage):
+                model.t = params[i, 3:6]
+                R = params[i, 0:3]
+                model.R = R2Rmat(R)  # angle from resnet are in radian
+                current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t,mode='silhouettes').squeeze()
+                current_GT_sil = (silhouette[i] / 255).type(torch.FloatTensor).to(device)
 
-            if(epoch == n_epochs-1): #if we are at the last epoch, we plot the test result picture
+                loss += nn.BCELoss()(current_sil, current_GT_sil)
+                Test_Step_loss.append(loss.detach().cpu().numpy())
+                if(epoch == n_epochs-1):
 
-                for i in range(0, numbOfImage):
                     print('saving image to show')
-                    model.t = params[i, 3:6]
-                    R = params[i, 0:3]
-                    model.R = R2Rmat(R)  # angle from resnet are in radian
-                    print(params)
                     imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R,t=model.t)
 
                     imgCP= imgCP.squeeze()  # float32 from 0-1
@@ -128,41 +154,57 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
                     plt.yticks([])
 
 
+            loss = loss/numbOfImage
             Test_losses.append(loss.detach().cpu().numpy())
+            loss = 0        # reset current test loss
             testcount = testcount+1
 
 
 
 #-----------plot and save section ------------------------------------------------------------------------------------
 
-    fig, (p1, p2,p4) = plt.subplots(3, figsize=(15,10)) #largeur hauteur
+    fig, (p1, p2, p3, p4) = plt.subplots(4, figsize=(15,10)) #largeur hauteur
 
-    moving_aves = RolAv(Step_losses, window= 20)
-
-    p1.plot(np.arange(np.shape(moving_aves)[0]), moving_aves, label="step Loss rolling average")
+    #subplot 1
+    rollingAv = pd.DataFrame(Step_losses)
+    rollingAv.rolling(2, win_type='triang').sum()
+    p1.plot(np.arange(count), rollingAv, label="step Loss rolling average")
     p1.set( ylabel='BCE Step Loss')
-    p1.set_ylim([0, 1])
+    p1.set_ylim([0, 4])
     # Place a legend to the right of this smaller subplot.
     p1.legend()
 
     #subplot 2
     p2.plot(np.arange(n_epochs), Epoch_losses, label="epoch Loss")
     p2.set( ylabel=' Mean of BCE training step loss')
-    p2.set_ylim([0, 1])
+    p2.set_ylim([0, 4])
     # Place a legend to the right of this smaller subplot.
     p2.legend()
 
-
+    #subplot 3
+    ind = np.arange(n_epochs) #index
+    width = 0.35
+    p3.bar(ind, renderbar, width, color='#d62728', label="render")
+    height_cumulative = renderbar
+    p3.bar(ind, regressionbar, width, bottom=height_cumulative, label="regression")
+    p3.set(ylabel='render/regression call')
+    p3.set(xlabel='epoch')
+    p3.set_ylim([0, numbOfImageDataset])
+    p3.set_xticks(ind)
+    p3.legend()
 
     p4.plot(np.arange(testcount), Test_losses, label="Test Loss")
     p4.set( ylabel='Mean of BCE test step loss')
-    p4.set_ylim([0, 1])
+    p4.set_ylim([0, 5])
     # Place a legend to the right of this smaller subplot.
     p4.legend()
 
+
+
+
     plt.show()
 
-    fig.savefig('results/regression_{}batch_{}.pdf'.format(batch_size, n_epochs))
+    fig.savefig('results/render_{}batch_{}.pdf'.format(batch_size, n_epochs))
     import matplotlib2tikz
 
-    matplotlib2tikz.save("results/regression_{}batch_{}.tex".format(batch_size, n_epochs))
+    matplotlib2tikz.save("results/render_{}batch_{}.tex".format(batch_size, n_epochs))
