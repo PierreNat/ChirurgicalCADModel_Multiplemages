@@ -22,11 +22,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Body_20dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_5000dataset'  # choose the corresponding database to use
 
 batch_size = 4
 
-n_epochs = 2
+n_epochs = 25
 
 target_size = (512, 512)
 
@@ -50,9 +50,9 @@ params = np.load(parameters_file)
 
 #  ------------------------------------------------------------------
 
-ratio = 1  # 90%training 10%validation
+ratio = 0.9  # 90%training 10%validation
 split = int(len(cubes)*ratio)
-test_length = 10
+test_length = 100
 
 train_im = cubes[:split]  # 90% training
 train_sil = sils[:split]
@@ -63,13 +63,14 @@ number_train_im = np.shape(train_im)[0]
 # val_sil = sils[split:]
 # val_param = params[split:]
 
-val_im = cubes[:test_length]  # remaining ratio for validation
-val_sil = sils[:test_length]
-val_param = params[:test_length]
 
-test_im = cubes[:test_length]
-test_sil = sils[:test_length]
-test_param = params[:test_length]
+val_im = cubes[:split]  # remaining ratio for validation
+val_sil = sils[:split]
+val_param = params[:split]
+
+test_im = cubes[:split]
+test_sil = sils[:split]
+test_param = params[:split]
 number_testn_im = np.shape(test_im)[0]
 
 
@@ -158,7 +159,7 @@ criterion = nn.BCELoss()  #nn.BCELoss()   #nn.CrossEntropyLoss()  define the los
 #
 #  ------------------------------------------------------------------
 
-train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
+train_regressionV2(model, train_dataloader, test_dataloader,
                                         n_epochs, criterion,
                                         date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise, number_train_im)
 

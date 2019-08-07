@@ -5,9 +5,27 @@ import torch
 import torch.nn as nn
 import  pandas as pd
 import matplotlib.pyplot as plt
+from numpy.random import uniform
 from utils_functions.renderBatchItem import renderBatchSil
 from utils_functions.testRender import testRenderResnet
 from utils_functions.R2Rmat import R2Rmat
+import pandas as pd
+
+def RolAv(list, window = 2):
+
+    mylist = list
+    print(mylist)
+    N = window
+    cumsum, moving_aves = [0], []
+
+    for i, x in enumerate(mylist, 1):
+        cumsum.append(cumsum[i - 1] + x)
+        if i >= N:
+            moving_ave = (cumsum[i] - cumsum[i - N]) / N
+            # can do stuff with moving_ave here
+            moving_aves.append(moving_ave)
+
+    return moving_aves
 
 
 
@@ -17,75 +35,70 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
     # monitor loss functions as the training progresses
     lr = 0.001
     loop = n_epochs
-    Step_losses = []
+    Step_Val_losses = []
     current_step_loss = []
+    current_step_Test_loss = []
     Test_losses = []
-    Epoch_losses = []
+    Epoch_Val_losses = []
+    Epoch_Test_losses = []
     count = 0
     testcount = 0
-    regressionCount = 0
-    regressionbar = []
-    regressionbar = []
     Im2ShowGT = []
     Im2ShowGCP = []
+    LastEpochTestCPparam = []
+    LastEpochTestGTparam = []
     numbOfImageDataset = number_train_im
 
 
-    for epoch in tqdm(range(n_epochs)):
+    for epoch in range(n_epochs):
 
         ## Training phase
         model.train()
-        print('train phase epoch {}'.format(epoch))
+        print('train phase epoch {}/{}'.format(epoch, n_epochs))
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-        for image, silhouette, parameter in train_dataloader:
-
-            numbOfImage = image.size()[0]
+        t = tqdm(iter(train_dataloader), leave=True, total=len(train_dataloader))
+        for image, silhouette, parameter in t:
             image = image.to(device)
             parameter = parameter.to(device)
-
-            params = model(image) #should be size [batchsize, 6]
-            # print('computed parameters are {}'.format(params))
-            # print(params.size())
-
+            params = model(image)  # should be size [batchsize, 6]
             optimizer.zero_grad()
+            numbOfImage = image.size()[0]
+            # loss = nn.MSELoss()(params, parameter).to(device)
+
             for i in range(0,numbOfImage):
                 #create and store silhouette
                 model.t = params[i, 3:6]
                 R = params[i, 0:3]
+                if (i == 0):
+                    loss =nn.MSELoss()(params[i], parameter[i]).to(device)
+                else:
+                    loss = loss + nn.MSELoss()(params[i], parameter[i]).to(device)
 
-                model.R = R2Rmat(R)  # angle from resnet are in radian
 
-                loss += nn.MSELoss()(params[i], parameter[i]).to(device)
-                regressionCount += 1
 
-            # loss = loss/numbOfImage #take the mean of the step loss
 
 
 
             loss.backward()
             optimizer.step()
-            print(loss)
-            Step_losses.append(loss.detach().cpu().numpy()) # contain all step value for all epoch
-            current_step_loss.append(loss.detach().cpu().numpy()) #contain only this epoch loss, will be reset after each epoch
-            count = count+1
+            # print(loss)
+            Step_Val_losses.append(loss.detach().cpu().numpy())  # contain all step value for all epoch
+            current_step_loss.append(
+                loss.detach().cpu().numpy())  # contain only this epoch loss, will be reset after each epoch
+            count = count + 1
 
-        epochloss = np.mean(current_step_loss)
+        epochValloss = np.mean(current_step_loss)
         current_step_loss = []
-        Epoch_losses.append(epochloss) #most significant value to store
-        print(epochloss)
+        Epoch_Val_losses.append(epochValloss)  # most significant value to store
+        # print(epochValloss)
 
-
-
-
-
-        #validation phase
+        # validation phase
         print('test phase epoch {}'.format(epoch))
-
         model.eval()
 
-
-        for image, silhouette, parameter in test_dataloader:
+        t = tqdm(iter(test_dataloader), leave=True, total=len(test_dataloader))
+        for image, silhouette, parameter in t:
 
             Test_Step_loss = []
             numbOfImage = image.size()[0]
@@ -93,77 +106,87 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
             image = image.to(device)
             parameter = parameter.to(device)
             params = model(image)  # should be size [batchsize, 6]
+            # print(np.shape(params))
 
-            for i in range(0, numbOfImage):
-                model.t = params[i, 3:6]
-                R = params[i, 0:3]
-                model.R = R2Rmat(R)  # angle from resnet are in radian
+            loss = nn.MSELoss()(params, parameter).to(device)
+            Test_Step_loss.append(loss.detach().cpu().numpy())
 
-                loss += nn.MSELoss()(params[i], parameter[i]).to(device)
-                Test_Step_loss.append(loss.detach().cpu().numpy())
+            if (epoch == n_epochs - 1):  # if we are at the last epoch, save param to plot result
 
-                if(epoch == n_epochs-1):
+                LastEpochTestCPparam.extend(params.detach().cpu().numpy())
+                LastEpochTestGTparam.extend(parameter.detach().cpu().numpy())
 
-                    print('saving image to show')
-                    imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R,t=model.t)
-
-                    imgCP= imgCP.squeeze()  # float32 from 0-1
-                    imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
-                    imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
-                    imgGT = image[i].detach().cpu().numpy()
-                    imgGT = (imgGT * 0.5 + 0.5).transpose(1, 2, 0) #denormalization
-                    Im2ShowGT.append(imgCP)
-                    Im2ShowGCP.append(imgGT)
-
-                    a = plt.subplot(2, numbOfImage, i + 1)
-                    plt.imshow(imgGT)
-                    a.set_title('GT {}'.format(i))
-                    plt.xticks([0, 512])
-                    plt.yticks([])
-                    a = plt.subplot(2, numbOfImage, i + 1 + numbOfImage)
-                    plt.imshow(imgCP)
-                    a.set_title('Rdr {}'.format(i))
-                    plt.xticks([0, 512])
-                    plt.yticks([])
-
-
-            # loss = loss/numbOfImage
             Test_losses.append(loss.detach().cpu().numpy())
-            loss = 0        # reset current test loss
-            testcount = testcount+1
+            current_step_Test_loss.append(loss.detach().cpu().numpy())
+            testcount = testcount + 1
 
+        epochTestloss = np.mean(current_step_Test_loss)
+        current_step_Test_loss = []
+        Epoch_Test_losses.append(epochTestloss)  # most significant value to store
 
+    # ----------- plot some result from the last epoch computation ------------------------
 
-#-----------plot and save section ------------------------------------------------------------------------------------
+    # print(np.shape(LastEpochTestCPparam)[0])
+    nim = 5
+    for i in range(0, nim):
+        print('saving image to show')
+        pickim = int(uniform(0, np.shape(LastEpochTestCPparam)[0] - 1))
+        # print(pickim)
 
-    fig, (p1, p2,p4) = plt.subplots(3, figsize=(15,10)) #largeur hauteur
+        model.t = torch.from_numpy(LastEpochTestCPparam[pickim][3:6]).to(device)
+        R = torch.from_numpy(LastEpochTestCPparam[pickim][0:3]).to(device)
+        model.R = R2Rmat(R)  # angle from resnet are in radia
+        imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
 
-    #subplot 1
-    rollingAv = pd.DataFrame(Step_losses)
-    rollingAv.rolling(2, win_type='triang').sum()
-    p1.plot(np.arange(count), rollingAv, label="step Loss rolling average")
-    p1.set( ylabel='BCE Step Loss')
+        model.t = torch.from_numpy(LastEpochTestGTparam[pickim][3:6]).to(device)
+        R = torch.from_numpy(LastEpochTestGTparam[pickim][0:3]).to(device)
+        model.R = R2Rmat(R)  # angle from resnet are in radia
+        imgGT, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
+
+        imgCP = imgCP.squeeze()  # float32 from 0-1
+        imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
+        imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
+        imgGT = imgGT.squeeze()  # float32 from 0-1
+        imgGT = imgGT.detach().cpu().numpy().transpose((1, 2, 0))
+        imgGT = (imgGT * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
+        Im2ShowGT.append(imgCP)
+        Im2ShowGCP.append(imgGT)
+
+        a = plt.subplot(2, nim, i + 1)
+        plt.imshow(imgGT)
+        a.set_title('GT {}'.format(i))
+        plt.xticks([0, 512])
+        plt.yticks([])
+        a = plt.subplot(2, nim, i + 1 + nim)
+        plt.imshow(imgCP)
+        a.set_title('Rdr {}'.format(i))
+        plt.xticks([0, 512])
+        plt.yticks([])
+
+    # -----------plot and save section ------------------------------------------------------------------------------------
+
+    fig, (p1, p2, p4) = plt.subplots(3, figsize=(15, 10))  # largeur hauteur
+
+    moving_aves = RolAv(Step_Val_losses, window=20)
+
+    p1.plot(np.arange(np.shape(moving_aves)[0]), moving_aves, label="step Loss rolling average")
+    p1.set(ylabel='BCE Step Loss')
+    p1.set(xlabel='Steps')
     p1.set_ylim([0, 4])
-    # Place a legend to the right of this smaller subplot.
-    p1.legend()
+    p1.legend()  # Place a legend to the right of this smaller subplot.
 
-    #subplot 2
-    p2.plot(np.arange(n_epochs), Epoch_losses, label="epoch Loss")
-    p2.set( ylabel=' Mean of BCE training step loss')
+    # subplot 2
+    p2.plot(np.arange(n_epochs), Epoch_Val_losses, label="epoch Loss")
+    p2.set(ylabel=' Mean of BCE training step loss')
+    p2.set(xlabel='Epochs')
     p2.set_ylim([0, 4])
-    # Place a legend to the right of this smaller subplot.
     p2.legend()
 
-
-
-    p4.plot(np.arange(testcount), Test_losses, label="Test Loss")
-    p4.set( ylabel='Mean of BCE test step loss')
-    p4.set_ylim([0, 5])
-    # Place a legend to the right of this smaller subplot.
+    p4.plot(np.arange(n_epochs), Epoch_Test_losses, label="Test Loss")
+    p4.set(ylabel='Mean of BCE test step loss')
+    p4.set(xlabel='Epochs')
+    p4.set_ylim([0, 2])
     p4.legend()
-
-
-
 
     plt.show()
 

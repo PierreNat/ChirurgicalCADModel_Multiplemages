@@ -50,14 +50,15 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
     numbOfImageDataset = number_train_im
 
 
-    for epoch in tqdm(range(n_epochs)):
+    for epoch in range(n_epochs):
 
         ## Training phase
         model.train()
-        print('train phase epoch {}'.format(epoch))
+        print('train phase epoch {}/{}'.format(epoch,n_epochs))
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-        for image, silhouette, parameter in train_dataloader:
+        t = tqdm(iter(train_dataloader), leave=True, total=len(train_dataloader))
+        for image, silhouette, parameter in t:
 
             image = image.to(device)
             parameter = parameter.to(device)
@@ -80,7 +81,8 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
         print('test phase epoch {}'.format(epoch))
         model.eval()
 
-        for image, silhouette, parameter in test_dataloader:
+        t = tqdm(iter(test_dataloader), leave=True, total=len(test_dataloader))
+        for image, silhouette, parameter in t:
 
             Test_Step_loss = []
             numbOfImage = image.size()[0]
@@ -97,7 +99,6 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
 
                 LastEpochTestCPparam.extend(params.detach().cpu().numpy())
                 LastEpochTestGTparam.extend(parameter.detach().cpu().numpy())
-
 
 
             Test_losses.append(loss.detach().cpu().numpy())
@@ -158,23 +159,23 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
 
     p1.plot(np.arange(np.shape(moving_aves)[0]), moving_aves, label="step Loss rolling average")
     p1.set( ylabel='BCE Step Loss')
+    p1.set( xlabel='Steps')
     p1.set_ylim([0, 2])
-    # Place a legend to the right of this smaller subplot.
-    p1.legend()
+    p1.legend()     # Place a legend to the right of this smaller subplot.
 
     #subplot 2
     p2.plot(np.arange(n_epochs), Epoch_Val_losses, label="epoch Loss")
     p2.set( ylabel=' Mean of BCE training step loss')
+    p2.set( xlabel='Epochs')
     p2.set_ylim([0, 2])
-    # Place a legend to the right of this smaller subplot.
     p2.legend()
 
 
 
     p4.plot(np.arange(n_epochs), Epoch_Test_losses, label="Test Loss")
     p4.set( ylabel='Mean of BCE test step loss')
+    p4.set( xlabel='Epochs')
     p4.set_ylim([0, 2])
-    # Place a legend to the right of this smaller subplot.
     p4.legend()
 
     plt.show()
