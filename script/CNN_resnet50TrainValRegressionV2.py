@@ -22,11 +22,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Body_2000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_2000dataset'  # choose the corresponding database to use
 
 batch_size = 4
 
-n_epochs = 15
+n_epochs = 2
 
 target_size = (512, 512)
 
@@ -41,7 +41,7 @@ cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the docum
 
 date4File = '080619_{}'.format(fileExtension) #mmddyy
 
-obj_name = 'AllTool'
+obj_name = 'wrist'
 
 
 cubes = np.load(cubes_file)
@@ -52,7 +52,7 @@ params = np.load(parameters_file)
 
 ratio = 1  # 90%training 10%validation
 split = int(len(cubes)*ratio)
-test_length = 4
+test_length = 50
 
 train_im = cubes[:split]  # 90% training
 train_sil = sils[:split]
@@ -85,7 +85,7 @@ test_dataset = CubeDataset(test_im, test_sil, test_param, transforms)
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-test_dataloader = DataLoader(test_dataset, batch_size=number_testn_im, shuffle=False, num_workers=2)
+test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 
 # for image, sil, param in train_dataloader:

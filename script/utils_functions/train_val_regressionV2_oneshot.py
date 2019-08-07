@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import  pandas as pd
 import matplotlib.pyplot as plt
+from numpy.random import uniform
 from utils_functions.renderBatchItem import renderBatchSil
 from utils_functions.testRender import testRenderResnet
 from utils_functions.R2Rmat import R2Rmat
@@ -34,15 +35,14 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
     # monitor loss functions as the training progresses
     lr = 0.001
     loop = n_epochs
-    Step_losses = []
+    Step_Val_losses = []
     current_step_loss = []
+    current_step_Test_loss = []
     Test_losses = []
-    Epoch_losses = []
+    Epoch_Val_losses = []
+    Epoch_Test_losses = []
     count = 0
     testcount = 0
-    regressionCount = 0
-    regressionbar = []
-    regressionbar = []
     Im2ShowGT = []
     Im2ShowGCP = []
     numbOfImageDataset = number_train_im
@@ -59,31 +59,24 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
 
             image = image.to(device)
             parameter = parameter.to(device)
-
             params = model(image) #should be size [batchsize, 6]
-
             optimizer.zero_grad()
             loss = nn.MSELoss()(params, parameter).to(device)
-
             loss.backward()
             optimizer.step()
-            print(loss)
-
-            Step_losses.append(loss.detach().cpu().numpy()) # contain all step value for all epoch
+            # print(loss)
+            Step_Val_losses.append(loss.detach().cpu().numpy()) # contain all step value for all epoch
             current_step_loss.append(loss.detach().cpu().numpy()) #contain only this epoch loss, will be reset after each epoch
             count = count+1
 
-        epochloss = np.mean(current_step_loss)
+        epochValloss = np.mean(current_step_loss)
         current_step_loss = []
-        Epoch_losses.append(epochloss) #most significant value to store
-        print(epochloss)
-
+        Epoch_Val_losses.append(epochValloss) #most significant value to store
+        print(epochValloss)
 
         #validation phase
         print('test phase epoch {}'.format(epoch))
-
         model.eval()
-
 
         for image, silhouette, parameter in test_dataloader:
 
@@ -100,10 +93,11 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
 
             if(epoch == n_epochs-1): #if we are at the last epoch, we plot the test result picture
 
-                for i in range(0, numbOfImage):
+                for i in range(0, 5):
                     print('saving image to show')
-                    model.t = params[i, 3:6]
-                    R = params[i, 0:3]
+                    pickim = int(uniform(0, numbOfImage-1))
+                    model.t = params[pickim , 3:6]
+                    R = params[pickim , 0:3]
                     model.R = R2Rmat(R)  # angle from resnet are in radian
                     print(params)
                     imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R,t=model.t)
@@ -111,7 +105,7 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
                     imgCP= imgCP.squeeze()  # float32 from 0-1
                     imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
                     imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
-                    imgGT = image[i].detach().cpu().numpy()
+                    imgGT = image[pickim].detach().cpu().numpy()
                     imgGT = (imgGT * 0.5 + 0.5).transpose(1, 2, 0) #denormalization
                     Im2ShowGT.append(imgCP)
                     Im2ShowGCP.append(imgGT)
@@ -129,7 +123,12 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
 
 
             Test_losses.append(loss.detach().cpu().numpy())
+            current_step_Test_loss.append(loss.detach().cpu().numpy())
             testcount = testcount+1
+
+        epochTestloss = np.mean(current_step_Test_loss)
+        current_step_Test_loss = []
+        Epoch_Test_losses.append(epochTestloss)  # most significant value to store
 
 
 
@@ -137,26 +136,26 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
 
     fig, (p1, p2,p4) = plt.subplots(3, figsize=(15,10)) #largeur hauteur
 
-    moving_aves = RolAv(Step_losses, window= 20)
+    moving_aves = RolAv(Step_Val_losses, window= 20)
 
     p1.plot(np.arange(np.shape(moving_aves)[0]), moving_aves, label="step Loss rolling average")
     p1.set( ylabel='BCE Step Loss')
-    p1.set_ylim([0, 1])
+    p1.set_ylim([0, 2])
     # Place a legend to the right of this smaller subplot.
     p1.legend()
 
     #subplot 2
-    p2.plot(np.arange(n_epochs), Epoch_losses, label="epoch Loss")
+    p2.plot(np.arange(n_epochs), Epoch_Val_losses, label="epoch Loss")
     p2.set( ylabel=' Mean of BCE training step loss')
-    p2.set_ylim([0, 1])
+    p2.set_ylim([0, 2])
     # Place a legend to the right of this smaller subplot.
     p2.legend()
 
 
 
-    p4.plot(np.arange(testcount), Test_losses, label="Test Loss")
+    p4.plot(np.arange(n_epochs), Epoch_Test_losses, label="Test Loss")
     p4.set( ylabel='Mean of BCE test step loss')
-    p4.set_ylim([0, 1])
+    p4.set_ylim([0, 2])
     # Place a legend to the right of this smaller subplot.
     p4.legend()
 
