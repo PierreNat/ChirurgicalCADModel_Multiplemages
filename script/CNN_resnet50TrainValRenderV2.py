@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
 from utils_functions.MyResnet import Myresnet50
 from utils_functions.train_val_renderV2 import train_renderV2
-from utils_functions.train_val_renderV2_oneshot import train_renderV2_oneshot
+
 from utils_functions.cubeDataset import CubeDataset
 
 # device = torch.device('cpu')
@@ -22,11 +22,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Body_2000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_5000dataset'  # choose the corresponding database to use
 
 batch_size = 4
 
-n_epochs = 20
+n_epochs = 2
 
 target_size = (512, 512)
 
@@ -41,7 +41,7 @@ cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the docum
 
 date4File = '080619_{}'.format(fileExtension) #mmddyy
 
-obj_name = 'AllTool'
+obj_name = 'wrist'
 
 
 cubes = np.load(cubes_file)
@@ -50,9 +50,9 @@ params = np.load(parameters_file)
 
 #  ------------------------------------------------------------------
 
-ratio = 1  # 90%training 10%validation
+ratio = 0.9  # 90%training 10%validation
 split = int(len(cubes)*ratio)
-test_length = 4
+test_length = 100
 
 train_im = cubes[:split]  # 90% training
 train_sil = sils[:split]
@@ -63,13 +63,14 @@ number_train_im = np.shape(train_im)[0]
 # val_sil = sils[split:]
 # val_param = params[split:]
 
-val_im = cubes[:test_length]  # remaining ratio for validation
-val_sil = sils[:test_length]
-val_param = params[:test_length]
 
-test_im = cubes[:test_length]
-test_sil = sils[:test_length]
-test_param = params[:test_length]
+val_im = cubes[:split]  # remaining ratio for validation
+val_sil = sils[:split]
+val_param = params[:split]
+
+test_im = cubes[split:]
+test_sil = sils[split:]
+test_param = params[split:]
 number_testn_im = np.shape(test_im)[0]
 
 
@@ -85,7 +86,7 @@ test_dataset = CubeDataset(test_im, test_sil, test_param, transforms)
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-test_dataloader = DataLoader(test_dataset, batch_size=number_testn_im, shuffle=False, num_workers=2)
+test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 
 # for image, sil, param in train_dataloader:

@@ -11,7 +11,7 @@ from utils_functions.R2Rmat import R2Rmat
 
 
 
-def train_renderV2_oneshot(model, train_dataloader, test_dataloader,
+def train_renderV2(model, train_dataloader, test_dataloader,
                  n_epochs, loss_function,
                  date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise, number_train_im):
     # monitor loss functions as the training progresses

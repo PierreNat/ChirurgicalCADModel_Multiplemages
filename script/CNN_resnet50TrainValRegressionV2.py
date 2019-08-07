@@ -68,9 +68,9 @@ val_im = cubes[:split]  # remaining ratio for validation
 val_sil = sils[:split]
 val_param = params[:split]
 
-test_im = cubes[:split]
-test_sil = sils[:split]
-test_param = params[:split]
+test_im = cubes[split:]
+test_sil = sils[split:]
+test_param = params[split:]
 number_testn_im = np.shape(test_im)[0]
 
 

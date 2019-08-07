@@ -84,8 +84,7 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
             optimizer.step()
             # print(loss)
             Step_Val_losses.append(loss.detach().cpu().numpy())  # contain all step value for all epoch
-            current_step_loss.append(
-                loss.detach().cpu().numpy())  # contain only this epoch loss, will be reset after each epoch
+            current_step_loss.append(loss.detach().cpu().numpy())  # contain only this epoch loss, will be reset after each epoch
             count = count + 1
 
         epochValloss = np.mean(current_step_loss)
@@ -94,7 +93,7 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
         # print(epochValloss)
 
         # validation phase
-        print('test phase epoch {}'.format(epoch))
+        print('test phase epoch epoch {}/{}'.format(epoch, n_epochs))
         model.eval()
 
         t = tqdm(iter(test_dataloader), leave=True, total=len(test_dataloader))
