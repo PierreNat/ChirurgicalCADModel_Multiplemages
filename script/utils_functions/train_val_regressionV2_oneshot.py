@@ -45,6 +45,8 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
     testcount = 0
     Im2ShowGT = []
     Im2ShowGCP = []
+    LastEpochTestCPparam = []
+    LastEpochTestGTparam = []
     numbOfImageDataset = number_train_im
 
 
@@ -72,7 +74,7 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
         epochValloss = np.mean(current_step_loss)
         current_step_loss = []
         Epoch_Val_losses.append(epochValloss) #most significant value to store
-        print(epochValloss)
+        # print(epochValloss)
 
         #validation phase
         print('test phase epoch {}'.format(epoch))
@@ -86,41 +88,16 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
             image = image.to(device)
             parameter = parameter.to(device)
             params = model(image)  # should be size [batchsize, 6]
-
+            # print(np.shape(params))
 
             loss = nn.MSELoss()(params, parameter).to(device)
             Test_Step_loss.append(loss.detach().cpu().numpy())
 
-            if(epoch == n_epochs-1): #if we are at the last epoch, we plot the test result picture
-                nim = 5
-                for i in range(0, nim):
-                    print('saving image to show')
-                    pickim = int(uniform(0, numbOfImage-1))
-                    print(pickim)
-                    model.t = params[pickim , 3:6]
-                    R = params[pickim , 0:3]
-                    model.R = R2Rmat(R)  # angle from resnet are in radian
-                    print(params)
-                    imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R,t=model.t)
+            if(epoch == n_epochs-1): #if we are at the last epoch, save param to plot result
 
-                    imgCP= imgCP.squeeze()  # float32 from 0-1
-                    imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
-                    imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
-                    imgGT = image[pickim].detach().cpu().numpy()
-                    imgGT = (imgGT * 0.5 + 0.5).transpose(1, 2, 0) #denormalization
-                    Im2ShowGT.append(imgCP)
-                    Im2ShowGCP.append(imgGT)
+                LastEpochTestCPparam.extend(params.detach().cpu().numpy())
+                LastEpochTestGTparam.extend(parameter.detach().cpu().numpy())
 
-                    a = plt.subplot(2, nim, i + 1)
-                    plt.imshow(imgGT)
-                    a.set_title('GT {}'.format(i))
-                    plt.xticks([0, 512])
-                    plt.yticks([])
-                    a = plt.subplot(2, nim, i + 1 + nim)
-                    plt.imshow(imgCP)
-                    a.set_title('Rdr {}'.format(i))
-                    plt.xticks([0, 512])
-                    plt.yticks([])
 
 
             Test_losses.append(loss.detach().cpu().numpy())
@@ -130,6 +107,46 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
         epochTestloss = np.mean(current_step_Test_loss)
         current_step_Test_loss = []
         Epoch_Test_losses.append(epochTestloss)  # most significant value to store
+
+
+#----------- plot some result from the last epoch computation ------------------------
+
+    # print(np.shape(LastEpochTestCPparam)[0])
+    nim = 5
+    for i in range(0, nim):
+        print('saving image to show')
+        pickim = int(uniform(0, np.shape(LastEpochTestCPparam)[0] - 1))
+        # print(pickim)
+
+        model.t = torch.from_numpy(LastEpochTestCPparam[pickim][3:6]).to(device)
+        R = torch.from_numpy(LastEpochTestCPparam[pickim][0:3]).to(device)
+        model.R = R2Rmat(R)  # angle from resnet are in radia
+        imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
+
+        model.t = torch.from_numpy(LastEpochTestGTparam[pickim][3:6]).to(device)
+        R = torch.from_numpy(LastEpochTestGTparam[pickim][0:3]).to(device)
+        model.R = R2Rmat(R)  # angle from resnet are in radia
+        imgGT, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
+
+        imgCP = imgCP.squeeze()  # float32 from 0-1
+        imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
+        imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
+        imgGT = imgGT.squeeze()  # float32 from 0-1
+        imgGT = imgGT.detach().cpu().numpy().transpose((1, 2, 0))
+        imgGT = (imgGT * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
+        Im2ShowGT.append(imgCP)
+        Im2ShowGCP.append(imgGT)
+
+        a = plt.subplot(2, nim, i + 1)
+        plt.imshow(imgGT)
+        a.set_title('GT {}'.format(i))
+        plt.xticks([0, 512])
+        plt.yticks([])
+        a = plt.subplot(2, nim, i + 1 + nim)
+        plt.imshow(imgCP)
+        a.set_title('Rdr {}'.format(i))
+        plt.xticks([0, 512])
+        plt.yticks([])
 
 
 
