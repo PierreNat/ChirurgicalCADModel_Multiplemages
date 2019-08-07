@@ -92,10 +92,11 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
             Test_Step_loss.append(loss.detach().cpu().numpy())
 
             if(epoch == n_epochs-1): #if we are at the last epoch, we plot the test result picture
-
-                for i in range(0, 5):
+                nim = 5
+                for i in range(0, nim):
                     print('saving image to show')
                     pickim = int(uniform(0, numbOfImage-1))
+                    print(pickim)
                     model.t = params[pickim , 3:6]
                     R = params[pickim , 0:3]
                     model.R = R2Rmat(R)  # angle from resnet are in radian
@@ -110,12 +111,12 @@ def train_regressionV2_oneshot(model, train_dataloader, test_dataloader,
                     Im2ShowGT.append(imgCP)
                     Im2ShowGCP.append(imgGT)
 
-                    a = plt.subplot(2, numbOfImage, i + 1)
+                    a = plt.subplot(2, nim, i + 1)
                     plt.imshow(imgGT)
                     a.set_title('GT {}'.format(i))
                     plt.xticks([0, 512])
                     plt.yticks([])
-                    a = plt.subplot(2, numbOfImage, i + 1 + numbOfImage)
+                    a = plt.subplot(2, nim, i + 1 + nim)
                     plt.imshow(imgCP)
                     a.set_title('Rdr {}'.format(i))
                     plt.xticks([0, 512])

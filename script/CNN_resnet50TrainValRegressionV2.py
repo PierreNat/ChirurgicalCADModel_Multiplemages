@@ -22,7 +22,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Head_2000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Body_20dataset'  # choose the corresponding database to use
 
 batch_size = 4
 
@@ -52,7 +52,7 @@ params = np.load(parameters_file)
 
 ratio = 1  # 90%training 10%validation
 split = int(len(cubes)*ratio)
-test_length = 50
+test_length = 10
 
 train_im = cubes[:split]  # 90% training
 train_sil = sils[:split]
