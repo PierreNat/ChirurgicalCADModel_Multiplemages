@@ -29,11 +29,11 @@ def main():
     print(vertices_1.shape)
     print(faces_1.shape)
 
-    file_name_extension = 'wrist1im_Head_5000dataset'
+    file_name_extension = 'wrist1im_Head_10000dataset0_180_M2_2_5_8'
 
 
 
-    nb_im = 5000
+    nb_im = 10000
     #init and create renderer object
     R = np.array([np.radians(0), np.radians(0), np.radians(0)])  # angle in degree
     t = np.array([0, 0, 0])  # translation in meter

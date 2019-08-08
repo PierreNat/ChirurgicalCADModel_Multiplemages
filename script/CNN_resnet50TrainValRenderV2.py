@@ -22,11 +22,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Head_5000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_10000dataset_t'  # choose the corresponding database to use
 
-batch_size = 4
+batch_size = 6
 
-n_epochs = 2
+n_epochs = 1
 
 target_size = (512, 512)
 
@@ -35,11 +35,11 @@ cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-fileExtension = 'MultipleTestConvergence' #string to ad at the end of the file
+fileExtension = 'translation_test_whitebckgrnd' #string to ad at the end of the file
 
 cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the document name
 
-date4File = '080619_{}'.format(fileExtension) #mmddyy
+date4File = '080819_{}'.format(fileExtension) #mmddyy
 
 obj_name = 'wrist'
 
@@ -47,30 +47,27 @@ obj_name = 'wrist'
 cubes = np.load(cubes_file)
 sils = np.load(silhouettes_file)
 params = np.load(parameters_file)
+# print(np.min(params[:,5]))
 
 #  ------------------------------------------------------------------
 
-ratio = 0.9  # 90%training 10%validation
+ratio = 0.01  # 90%training 10%validation
 split = int(len(cubes)*ratio)
-test_length = 100
+testlen = 100
 
 train_im = cubes[:split]  # 90% training
 train_sil = sils[:split]
 train_param = params[:split]
 number_train_im = np.shape(train_im)[0]
 
-# val_im = cubes[split:]  # remaining ratio for validation
-# val_sil = sils[split:]
-# val_param = params[split:]
-
 
 val_im = cubes[:split]  # remaining ratio for validation
 val_sil = sils[:split]
 val_param = params[:split]
 
-test_im = cubes[split:]
-test_sil = sils[split:]
-test_param = params[split:]
+test_im = cubes[split:split+testlen]
+test_sil = sils[split:split+testlen]
+test_param = params[split:split+testlen]
 number_testn_im = np.shape(test_im)[0]
 
 
@@ -117,6 +114,7 @@ test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
 #         print(image.size(), sil.size(), param.size()) #torch.Size([batch, 3, 512, 512]) torch.Size([batch, 6])
 #         im = i
 #         print(param[im])  # parameter in form tensor([2.5508, 0.0000, 0.0000, 0.0000, 0.0000, 5.0000])
+#
 #
 #         image2show = image[im]  # indexing random  one image
 #         print(image2show.size()) #torch.Size([3, 512, 512])

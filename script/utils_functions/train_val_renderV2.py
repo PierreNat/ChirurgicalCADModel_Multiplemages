@@ -9,6 +9,7 @@ from utils_functions.renderBatchItem import renderBatchSil
 from utils_functions.testRender import testRenderResnet
 from utils_functions.R2Rmat import R2Rmat
 from numpy.random import uniform
+import matplotlib2tikz
 
 def RolAv(list, window = 2):
 
@@ -30,7 +31,6 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                  n_epochs, loss_function,
                  date4File, cubeSetName, batch_size, fileExtension, device, obj_name, noise, number_train_im):
     # monitor loss functions as the training progresses
-    lr = 0.0001
 
     loop = n_epochs
     Step_Val_losses = []
@@ -50,21 +50,8 @@ def train_renderV2(model, train_dataloader, test_dataloader,
     regressionCount = 0
     renderbar = []
     regressionbar = []
+    lr= 0.00001
 
-    # loop = n_epochs
-    # Step_losses = []
-    # current_step_loss = []
-    # Test_losses = []
-    # Epoch_losses = []
-    # count = 0
-    # testcount = 0
-    # renderCount = 0
-    # regressionCount = 0
-    # renderbar = []
-    # regressionbar = []
-    # Im2ShowGT = []
-    # Im2ShowGCP = []
-    # numbOfImageDataset = number_train_im
 
     for epoch in range(n_epochs):
 
@@ -77,7 +64,6 @@ def train_renderV2(model, train_dataloader, test_dataloader,
             image = image.to(device)
             parameter = parameter.to(device)
             params = model(image)  # should be size [batchsize, 6]
-            optimizer.zero_grad()
             numbOfImage = image.size()[0]
             # loss = nn.MSELoss()(params, parameter).to(device)
 
@@ -90,26 +76,22 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                 current_sil = model.renderer(model.vertices, model.faces, R=model.R, t=model.t, mode='silhouettes').squeeze()
                 current_GT_sil = (silhouette[i]/255).type(torch.FloatTensor).to(device)
 
-
-                if (model.t[2] > 4.9 and model.t[2] < 8.1 and torch.abs(model.t[0]) < 2.1 and torch.abs(model.t[1]) < 2.1):
-                    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+                if (model.t[2] > 6.9 and model.t[2] < 10.1 and torch.abs(model.t[0]) < 2.1 and torch.abs(model.t[1]) < 2.1):
+                # if (epoch > 0):
+                    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+                    optimizer.zero_grad()
                     if (i == 0):
                         loss  =  nn.BCELoss()(current_sil, current_GT_sil).to(device)
-
                     else:
                         loss = loss + nn.BCELoss()(current_sil, current_GT_sil).to(device)
-
-                    # print('render')
                     renderCount += 1
                 else:
                     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+                    optimizer.zero_grad()
                     if (i == 0):
                         loss = nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
-
                     else:
                         loss = loss + nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
-
-                    # print('regression')
                     regressionCount += 1
 
             loss.backward()
@@ -132,7 +114,13 @@ def train_renderV2(model, train_dataloader, test_dataloader,
         renderCount = 0
         regressionCount = 0
 
-
+        torch.save(model.state_dict(),
+                   'models/{}_TempModel_train_{}_{}batchs_{}epochs_Noise{}_{}_RenderRegr.pth'.format(date4File,
+                                                                                                      cubeSetName,
+                                                                                                      str(batch_size),
+                                                                                                      str(n_epochs),
+                                                                                                      noise * 100,
+                                                                                                      fileExtension))
         # validation phase
         print('test phase epoch epoch {}/{}'.format(epoch, n_epochs))
         model.eval()
@@ -161,8 +149,6 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                     loss  =  nn.BCELoss()(current_sil, current_GT_sil).to(device)
                 else:
                     loss = loss + nn.BCELoss()(current_sil, current_GT_sil).to(device)
-
-
 
             Test_Step_loss.append(loss.detach().cpu().numpy())
 
@@ -218,50 +204,52 @@ def train_renderV2(model, train_dataloader, test_dataloader,
         plt.xticks([0, 512])
         plt.yticks([])
 
-
+    plt.savefig('results/image_render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
 #-----------plot and save section ------------------------------------------------------------------------------------
 
-    fig, (p1, p2, p3, p4) = plt.subplots(4, figsize=(15, 10))  # largeur hauteur
+    fig, (p1, p2, p3, p4) = plt.subplots(4, figsize=(15, 15))  # largeur hauteur
 
-    moving_aves = RolAv(Step_Val_losses, window=20)
+
+    moving_aves = RolAv(Step_Val_losses, window=40)
+    ind = np.arange(n_epochs)  # index
 
     p1.plot(np.arange(np.shape(moving_aves)[0]), moving_aves, label="step Loss rolling average")
     p1.set(ylabel='BCE Step Loss')
     p1.set(xlabel='Steps')
-    p1.set_ylim([0, 20])
+    p1.set_ylim([0, 10])
     p1.legend()  # Place a legend to the right of this smaller subplot.
 
     # subplot 2
-    p2.plot(np.arange(n_epochs), Epoch_Val_losses, label="epoch Loss")
+    p2.plot(np.arange(n_epochs), Epoch_Val_losses, label="Render epoch Loss")
     p2.set(ylabel=' Mean of BCE training step loss')
     p2.set(xlabel='Epochs')
-    p2.set_ylim([0, 20])
+    p2.set_ylim([0, 5])
+    p2.set_xticks(ind)
     p2.legend()
 
     # subplot 3
-    ind = np.arange(n_epochs) #index
+
     width = 0.35
     p3.bar(ind, renderbar, width, color='#d62728', label="render")
     height_cumulative = renderbar
     p3.bar(ind, regressionbar, width, bottom=height_cumulative, label="regression")
     p3.set(ylabel='render/regression call')
-    p3.set(xlabel='epoch')
+    p3.set(xlabel='Epochs')
     p3.set_ylim([0, numbOfImageDataset])
     p3.set_xticks(ind)
     p3.legend()
 
     # subplot 4
-
-    p4.plot(np.arange(n_epochs), Epoch_Test_losses, label="Test Loss")
+    p4.plot(np.arange(n_epochs), Epoch_Test_losses, label="Render Test Loss")
     p4.set(ylabel='Mean of BCE test step loss')
     p4.set(xlabel='Epochs')
-    p4.set_ylim([0, 2])
+    p4.set_ylim([0, 5])
     p4.legend()
 
 
     plt.show()
 
-    fig.savefig('results/render_{}batch_{}.pdf'.format(batch_size, n_epochs))
-    import matplotlib2tikz
+    fig.savefig('results/render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
 
-    matplotlib2tikz.save("results/render_{}batch_{}.tex".format(batch_size, n_epochs))
+
+    matplotlib2tikz.save("results/render_{}batch_{}_{}.tex".format(batch_size, n_epochs, fileExtension))

@@ -68,16 +68,10 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
 
             for i in range(0,numbOfImage):
                 #create and store silhouette
-                model.t = params[i, 3:6]
-                R = params[i, 0:3]
                 if (i == 0):
                     loss =nn.MSELoss()(params[i], parameter[i]).to(device)
                 else:
                     loss = loss + nn.MSELoss()(params[i], parameter[i]).to(device)
-
-
-
-
 
 
             loss.backward()
@@ -107,7 +101,12 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
             params = model(image)  # should be size [batchsize, 6]
             # print(np.shape(params))
 
-            loss = nn.MSELoss()(params, parameter).to(device)
+            for i in range(0,numbOfImage):
+                if (i == 0):
+                    loss =nn.MSELoss()(params[i], parameter[i]).to(device)
+                else:
+                    loss = loss + nn.MSELoss()(params[i], parameter[i]).to(device)
+
             Test_Step_loss.append(loss.detach().cpu().numpy())
 
             if (epoch == n_epochs - 1):  # if we are at the last epoch, save param to plot result
