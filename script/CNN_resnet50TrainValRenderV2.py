@@ -14,7 +14,6 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
 from utils_functions.MyResnet import Myresnet50
 from utils_functions.train_val_renderV2 import train_renderV2
-
 from utils_functions.cubeDataset import CubeDataset
 
 # device = torch.device('cpu')
@@ -138,14 +137,12 @@ data_dir = os.path.join(current_dir, 'data')
 noise = 0.0
 parser = argparse.ArgumentParser()
 parser.add_argument('-io', '--filename_obj', type=str, default=os.path.join(data_dir, '{}.obj'.format(obj_name)))
-parser.add_argument('-ir', '--filename_ref', type=str,default=os.path.join(data_dir, 'wrist1im_BodyR2_ref.png'))  # image result to target
-parser.add_argument('-in', '--filename_init', type=str, default=os.path.join(data_dir, 'example5_inT.png'))  # image to init resnet with regression
 parser.add_argument('-or', '--filename_output', type=str,default=os.path.join(data_dir, 'example5_resultR_render_1.gif'))
 parser.add_argument('-mr', '--make_reference_image', type=int, default=0)
 parser.add_argument('-g', '--gpu', type=int, default=0)
 args = parser.parse_args()
 
-model = Myresnet50(filename_obj=args.filename_obj, filename_ref=args.filename_ref, filename_init=args.filename_init)
+model = Myresnet50(filename_obj=args.filename_obj)
 
 model.to(device)
 

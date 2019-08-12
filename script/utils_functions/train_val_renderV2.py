@@ -5,8 +5,6 @@ import torch
 import torch.nn as nn
 import  pandas as pd
 import matplotlib.pyplot as plt
-from utils_functions.renderBatchItem import renderBatchSil
-from utils_functions.testRender import testRenderResnet
 from utils_functions.R2Rmat import R2Rmat
 from numpy.random import uniform
 import matplotlib2tikz

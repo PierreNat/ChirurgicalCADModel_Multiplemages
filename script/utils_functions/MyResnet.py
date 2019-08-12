@@ -22,12 +22,12 @@ model_urls = {
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
 
-def Myresnet50(filename_obj=None, filename_ref=None, filename_init=None, pretrained=True, cifar = True, modelName='None', **kwargs):
+def Myresnet50(filename_obj=None, pretrained=True, cifar = True, modelName='None', **kwargs):
     """Constructs a ResNet-50 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ModelResNet50( filename_obj=filename_obj, filename_ref=filename_ref, filename_init= filename_init)
+    model = ModelResNet50( filename_obj=filename_obj)
     if pretrained:
         print('using own pre-trained model')
 
@@ -50,7 +50,7 @@ def Myresnet50(filename_obj=None, filename_ref=None, filename_init=None, pretrai
 
 
 class ModelResNet50(ResNet):
-    def __init__(self, filename_obj=None, filename_ref=None, filename_init=None, *args, **kwargs):
+    def __init__(self, filename_obj=None, *args, **kwargs):
         super(ModelResNet50, self).__init__(Bottleneck, [3, 4, 6, 3], num_classes=6, **kwargs)
 
 # resnet part
@@ -83,12 +83,6 @@ class ModelResNet50(ResNet):
         self.register_buffer('faces', faces)
         self.register_buffer('textures', textures)
 
-        # load reference image
-        image_ref = torch.from_numpy((imread(filename_ref).max(-1) != 0).astype(np.float32))
-        self.register_buffer('image_ref', image_ref)
-         # create image to init the resnet weight at first
-        image_init = torch.from_numpy((imread(filename_init).max(-1) != 0).astype(np.float32))
-        self.register_buffer('image_init', image_init)
 
         # ---------------------------------------------------------------------------------
         # extrinsic parameter, link world/object coordinate to camera coordinate
