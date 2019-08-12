@@ -208,6 +208,7 @@ for image, silhouette, parameter in t:
 make_gif(args.filename_output)
 
 
+
 # ----------- plot some result from the last epoch computation ------------------------
 #
 #     # print(np.shape(LastEpochTestCPparam)[0])
