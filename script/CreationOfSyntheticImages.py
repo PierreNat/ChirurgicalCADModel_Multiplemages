@@ -29,7 +29,7 @@ def main():
     print(vertices_1.shape)
     print(faces_1.shape)
 
-    file_name_extension = 'wrist1im_Head_10000dataset0_180_M2_2_5_8'
+    file_name_extension = 'wrist1im_Head_10000dataset0_360_M2_2_5_8'
 
 
 

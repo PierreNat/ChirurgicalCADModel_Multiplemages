@@ -57,7 +57,7 @@ modelName = '0epoch_080819_test_TempModel_train_cubes_wrist1im_Head_10000dataset
 
 file_name_extension = 'wrist1im_Head_1000img_sequence_Translation'  # choose the corresponding database to use
 
-batch_size = 6
+batch_size = 4
 
 n_epochs = 1
 
@@ -80,10 +80,10 @@ sils = np.load(silhouettes_file)
 params = np.load(parameters_file)
 
 #  ------------------------------------------------------------------
-
-test_im = cubes
-test_sil = sils
-test_param = params
+test = 4
+test_im = cubes[:test]
+test_sil = sils[:test]
+test_param = params[:test]
 number_testn_im = np.shape(test_im)[0]
 
 #  ------------------------------------------------------------------
@@ -151,8 +151,22 @@ count = 0
 testcount = 0
 Im2ShowGT = []
 Im2ShowGCP = []
-TestCPparam = []
+
+TestCPpara = []
 TestGTparam = []
+TestCPparamX = []
+TestCPparamY = []
+TestCPparamZ = []
+TestCPparamA = []
+TestCPparamB = []
+TestCPparamC = []
+
+TestGTparamX = []
+TestGTparamY = []
+TestGTparamZ = []
+TestGTparamA = []
+TestGTparamB = []
+TestGTparamC = []
 numbOfImageDataset = number_testn_im
 processcount= 0
 regressionCount = 0
@@ -195,12 +209,25 @@ for image, silhouette, parameter in t:
         imsave('/tmp/_tmp_%04d.png' % processcount, imgCP)
         processcount = processcount+1
         print(processcount)
+        TestCPparamX.extend(params[i, 3].detach().cpu().numpy())
+        TestCPparamY.extend(params[i, 4].detach().cpu().numpy())
+        TestCPparamZ.extend(params[i, 5].detach().cpu().numpy())
+        TestCPparamA.extend(params[i, 0].detach().cpu().numpy())
+        TestCPparamB.extend(params[i, 1].detach().cpu().numpy())
+        TestCPparamC.extend(params[i, 2].detach().cpu().numpy())
+
+        TestGTparamX.extend(parameter[i, 3].detach().cpu().numpy())
+        TestGTparamY.extend(parameter[i, 4].detach().cpu().numpy())
+        TestGTparamZ.extend(parameter[i, 5].detach().cpu().numpy())
+        TestGTparamA.extend(parameter[i, 0].detach().cpu().numpy())
+        TestGTparamB.extend(parameter[i, 1].detach().cpu().numpy())
+        TestGTparamC.extend(parameter[i, 2].detach().cpu().numpy())
 
     images_losses.append(loss.detach().cpu().numpy())
 
 
-    #save all parameters, computed and ground truth position
-    TestCPparam.extend(params.detach().cpu().numpy())
+    # #save all parameters, computed and ground truth position
+    TestCPparam.extend(params.detach().cpu().numpy()) #print(np.shape(TestCPparam)[0])
     TestGTparam.extend(parameter.detach().cpu().numpy())
 
     testcount = testcount + 1
@@ -210,45 +237,90 @@ make_gif(args.filename_output)
 
 
 # ----------- plot some result from the last epoch computation ------------------------
-#
-#     # print(np.shape(LastEpochTestCPparam)[0])
-# nim = 5
-# for i in range(0, nim):
-#     print('saving image to show')
-#     pickim = int(uniform(0, np.shape(LastEpochTestCPparam)[0] - 1))
-#     # print(pickim)
-#
-#     model.t = torch.from_numpy(LastEpochTestCPparam[pickim][3:6]).to(device)
-#     R = torch.from_numpy(LastEpochTestCPparam[pickim][0:3]).to(device)
-#     model.R = R2Rmat(R)  # angle from resnet are in radia
-#     imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
-#
-#     model.t = torch.from_numpy(LastEpochTestGTparam[pickim][3:6]).to(device)
-#     R = torch.from_numpy(LastEpochTestGTparam[pickim][0:3]).to(device)
-#     model.R = R2Rmat(R)  # angle from resnet are in radia
-#     imgGT, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
-#
-#     imgCP = imgCP.squeeze()  # float32 from 0-1
-#     imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
-#     imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
-#     imgGT = imgGT.squeeze()  # float32 from 0-1
-#     imgGT = imgGT.detach().cpu().numpy().transpose((1, 2, 0))
-#     imgGT = (imgGT * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
-#     Im2ShowGT.append(imgCP)
-#     Im2ShowGCP.append(imgGT)
-#
-#     a = plt.subplot(2, nim, i + 1)
-#     plt.imshow(imgGT)
-#     a.set_title('GT {}'.format(i))
-#     plt.xticks([0, 512])
-#     plt.yticks([])
-#     a = plt.subplot(2, nim, i + 1 + nim)
-#     plt.imshow(imgCP)
-#     a.set_title('Rdr {}'.format(i))
-#     plt.xticks([0, 512])
-#     plt.yticks([])
-#
-# plt.savefig('results/image_render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
+
+    # print(np.shape(LastEpochTestCPparam)[0])
+
+nim = 5
+for i in range(0, nim):
+    print('saving image to show')
+    pickim = int(uniform(0, testcount- 1))
+    # print(pickim)
+
+    model.t = torch.from_numpy(TestCPparam[pickim][3:6]).to(device)
+    R = torch.from_numpy(TestCPparam[pickim][0:3]).to(device)
+    model.R = R2Rmat(R)  # angle from resnet are in radia
+    imgCP, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
+
+    model.t = torch.from_numpy(TestGTparam[pickim][3:6]).to(device)
+    R = torch.from_numpy(TestGTparam[pickim][0:3]).to(device)
+    model.R = R2Rmat(R)  # angle from resnet are in radia
+    imgGT, _, _ = model.renderer(model.vertices, model.faces, torch.tanh(model.textures), R=model.R, t=model.t)
+
+    imgCP = imgCP.squeeze()  # float32 from 0-1
+    imgCP = imgCP.detach().cpu().numpy().transpose((1, 2, 0))
+    imgCP = (imgCP * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
+    imgGT = imgGT.squeeze()  # float32 from 0-1
+    imgGT = imgGT.detach().cpu().numpy().transpose((1, 2, 0))
+    imgGT = (imgGT * 255).astype(np.uint8)  # cast from float32 255.0 to 255 uint8
+    Im2ShowGT.append(imgCP)
+    Im2ShowGCP.append(imgGT)
+
+    a = plt.subplot(2, nim, i + 1)
+    plt.imshow(imgGT)
+    a.set_title('GT {}'.format(i))
+    plt.xticks([0, 512])
+    plt.yticks([])
+    a = plt.subplot(2, nim, i + 1 + nim)
+    plt.imshow(imgCP)
+    a.set_title('Rdr {}'.format(i))
+    plt.xticks([0, 512])
+    plt.yticks([])
+
+plt.savefig('results/ResultSequenceRenderTest/image_render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
+
+# #----------- plot ground truth with computed for all 6 parameters -----------------------------------------------------
+
+fig, (px, pz, py, pa, pb, pg) = plt.subplots(nrows=1, ncols=6, figsize=(15, 15))  # largeur hauteur
+px.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][0], color = 'g')
+px.set(ylabel='position [cm]')
+px.set(xlabel='frame no')
+px.set_ylim([-1.5, 1.5])
+px.set_title('Translation X')
+
+py.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][4], color = 'g')
+py.set(ylabel='position [cm]')
+py.set(xlabel='frame no')
+py.set_ylim([-1.5, 1.5])
+py.set_title('Translation Y')
+
+pz.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][6], color = 'g')
+pz.set(ylabel='position [cm]')
+pz.set(xlabel='frame no')
+pz.set_ylim([-1.5, 1.5])
+pz.set_title('Translation Z')
+
+pa.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][0], color = 'g')
+pa.set(ylabel='angle [deg]')
+pa.set(xlabel='frame no')
+pa.set_ylim([0, 360])
+pa.set_title('Wrist Alpha Rotation')
+
+pb.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][1], color = 'g')
+pb.set(ylabel='angle [deg]')
+pb.set(xlabel='frame no')
+pb.set_ylim([0, 360])
+pb.set_title('Wrist Beta Rotation')
+
+pg.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][2], color = 'g')
+pg.set(ylabel='angle [deg]')
+pg.set(xlabel='frame no')
+pg.set_ylim([0, 360])
+pg.set_title('Wrist Gamma Rotation')
+
+
+plt.show()
+# px.legend()  # Place a legend to the right of this smaller subplot.
+
 # #-----------plot and save section ------------------------------------------------------------------------------------
 #
 # fig, (p1, p2, p3, p4) = plt.subplots(4, figsize=(15, 15))  # largeur hauteur
@@ -293,10 +365,10 @@ make_gif(args.filename_output)
 #
 # plt.show()
 #
-# fig.savefig('results/render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
+# fig.savefig('results/ResultSequenceRenderTest/render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
 #
 #
-# matplotlib2tikz.save("results/render_{}batch_{}_{}.tex".format(batch_size, n_epochs, fileExtension))
+# matplotlib2tikz.save("results/ResultSequenceRenderTest/render_{}batch_{}_{}.tex".format(batch_size, n_epochs, fileExtension))
 #
 #
 
