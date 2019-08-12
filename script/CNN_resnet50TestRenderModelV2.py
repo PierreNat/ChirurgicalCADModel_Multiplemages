@@ -11,10 +11,13 @@ import numpy as np
 import tqdm
 import  matplotlib
 import matplotlib.pyplot as plt
-
+from torch.utils.data import DataLoader
+from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
 from utils_functions.render1item import render_1_image
 from utils_functions.resnet50 import resnet50
 from utils_functions.testRender import testRenderResnet
+from utils_functions.cubeDataset import CubeDataset
+
 
 
 # device = torch.device('cpu')
@@ -22,96 +25,93 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-# modelName = 'Best_Model_translation/070119_Wrist_test_TempModel_train_cubes_wrist_10000_t_batchsOf7img_0.0%noise_epochs_n2_Wrist_test_RenderRegr'
-# modelName = '070519_part3_30epochs_TempModel_train_cubes_wrist_10000_Rt_batchsOf7img_0.0%noise_epochs_n1_part3_30epochs_RenderRegr'
-# modelName = 'Best_Model_RealBackground/070619_Ubelix_realBackgroundtest_render_part1_TempModel_train_cubes_WristwithBackground_batchsOf20img_0.0%noise_epochs_n15_Ubelix_realBackgroundtest_render_part1_RenderRegr'
-modelName = 'Best_Model_RealMultipleMovingBackground/Ubelix_071519_Ubelix_WristwithMultMovingBackground_renderMSE_FinalModel_train_cubes_WristwithMultMovingBackground_20batchs_13epochs_Noise0.0_Ubelix_WristwithMultMovingBackground_renderMSE_Render'
+modelName = '080919_Ubelix_Lr0_001BCE2take2_FinalModel_train_cubes_wrist1im_Head_10000dataset0_180_M2_2_5_8_8batchs_40epochs_Noise0.0_Ubelix_Lr0_001BCE2take2_Render'
 
-# file_name_extension = 'wrist_10000_t'
-# file_name_extension = 'wrist_10000_Rt'
-file_name_extension ='WristwithBackground'
-file_name_extension = 'WristwithMovingBackground'
-file_name_extension = 'WristwithMultMovingBackground'
+
+file_name_extension = 'wrist1im_Head_1000img_sequence_Translation'  # choose the corresponding database to use
+
+batch_size = 6
+
+n_epochs = 1
+
+target_size = (512, 512)
+
 
 cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-target_size = (512, 512)
+fileExtension = 'test' #string to ad at the end of the file
+
+date4File = '080819_{}'.format(fileExtension) #mmddyy
+
 obj_name = 'wrist'
+
 
 cubes = np.load(cubes_file)
 sils = np.load(silhouettes_file)
 params = np.load(parameters_file)
 
-
-#  ------------------------------------------------------------------
-test_length = 100
-batch_size = 5
-
-test_im = cubes[:test_length]
-test_sil = sils[:test_length]
-test_param = params[:test_length]
-
 #  ------------------------------------------------------------------
 
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
+test_im = cubes
+test_sil = sils
+test_param = params
 
-class CubeDataset(Dataset):
-    # write your code
-    def __init__(self, images, silhouettes, parameters, transform=None):
-        self.images = images.astype(np.uint8)  # our image
-        self.silhouettes = silhouettes.astype(np.uint8)  # our related parameter
-        self.parameters = parameters.astype(np.float32)
-        self.transform = transform
-
-    def __getitem__(self, index):
-        # Anything could go here, e.g. image loading from file or a different structure
-        # must return image and center
-        sel_images = self.images[index].astype(np.float32) / 255
-        sel_sils = self.silhouettes[index]
-        sel_params = self.parameters[index]
-
-        if self.transform is not None:
-            sel_images = self.transform(sel_images)
-            sel_sils = self.transform(sel_sils)
-
-        return sel_images, sel_images, torch.FloatTensor(sel_params)  # return all parameter in tensor form
-
-    def __len__(self):
-        return len(self.images)  # return the length of the dataset
 #  ------------------------------------------------------------------
-
 
 normalize = Normalize(mean=[0.5], std=[0.5])
-
-transforms = Compose([ ToTensor(),  normalize])
-
+gray_to_rgb = Lambda(lambda x: x.repeat(3, 1, 1))
+transforms = Compose([ToTensor(),  normalize])
 test_dataset = CubeDataset(test_im, test_sil, test_param, transforms)
 
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 
-#  ------------------------------------------------------------------
-
-# # check to iterate inside the test dataloader
-# for image, sil, param in test_dataloader:
+# for image, sil, param in train_dataloader:
 #
-#     # print(image[2])
-#     print(image.size(), param.size()) #torch.Size([batch, 3, 512, 512]) torch.Size([batch, 6])
-#     im =2
+# #plot silhouette
+#     print(image.size(), sil.size(), param.size()) #torch.Size([batch, 3, 512, 512]) torch.Size([batch, 6])
+#     im = 0
 #     print(param[im])  # parameter in form tensor([2.5508, 0.0000, 0.0000, 0.0000, 0.0000, 5.0000])
 #
 #     image2show = image[im]  # indexing random  one image
 #     print(image2show.size()) #torch.Size([3, 512, 512])
 #     plt.imshow((image2show * 0.5 + 0.5).numpy().transpose(1, 2, 0))
 #     plt.show()
+#
+#     image2show = sil[im]  # indexing random  one image
+#     print(image2show.size())  # torch.Size([3, 512, 512])
+#     image2show = image2show.numpy()
+#     plt.imshow(image2show, cmap='gray')
+#     plt.show()
+#
 #     break  # break here just to show 1 batch of data
 
 
+# for image, sil, param in test_dataloader:
+#
+#     nim = image.size()[0]
+#     for i in range(0,nim):
+#         print(image.size(), sil.size(), param.size()) #torch.Size([batch, 3, 512, 512]) torch.Size([batch, 6])
+#         im = i
+#         print(param[im])  # parameter in form tensor([2.5508, 0.0000, 0.0000, 0.0000, 0.0000, 5.0000])
+#
+#
+#         image2show = image[im]  # indexing random  one image
+#         print(image2show.size()) #torch.Size([3, 512, 512])
+#         plt.imshow((image2show * 0.5 + 0.5).numpy().transpose(1, 2, 0))
+#         plt.show()
+#
+#         image2show = sil[im]  # indexing random  one image
+#         print(image2show.size())  # torch.Size([3, 512, 512])
+#         image2show = image2show.numpy()
+#         plt.imshow(image2show, cmap='gray')
+#         plt.show()
+
+
 #  ------------------------------------------------------------------
+# Setup the model
 
 
 model = resnet50(cifar=False, modelName=modelName) #train with the saved model from the training script

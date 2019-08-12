@@ -33,7 +33,6 @@ def make_gif(filename):
 
 def main():
 
-
     cubes_database = []
     sils_database = []
     params_database = []
@@ -50,13 +49,14 @@ def main():
     print(vertices_1.shape)
     print(faces_1.shape)
 
-    file_name_extension = 'wrist1im_Head_1000img_sequence_Translation'
 
+    nb_im = 1000
+
+    file_name_extension = 'wrist1im_Head_{}img_sequence_RotationTranslation'.format(nb_im)
     parser = argparse.ArgumentParser()
     parser.add_argument('-or', '--filename_output', type=str, default=os.path.join(result_dir, 'Animation_{}.gif'.format(file_name_extension)))
     args = parser.parse_args()
 
-    nb_im = 200
     #init and create renderer object
     R = np.array([np.radians(0), np.radians(0), np.radians(0)])  # angle in degree
     t = np.array([0, 0, 0])  # translation in meter
@@ -72,24 +72,28 @@ def main():
     prevB = 0
     prevG = 0
     circlepoint = PointsInCircum(1.5, nb_im)
+
     Z_sinus = np.linspace(0, 10*nb_im, nb_im)
     Z_sinus = 6 + np.sin(np.radians(Z_sinus))
     circlepoint_alpha = np.linspace(0, 360, nb_im)
     circlepoint_beta = np.linspace(0, 360, nb_im)
     circlepoint_gamma = np.linspace(0, 360, nb_im)
+    print('z axis translation min max are {} and {}'.format(Z_sinus.min(), Z_sinus.max())) #5.000000015261379 and 6.999998763828597
 
     loop = tqdm.tqdm(range(0, nb_im))
 
     for i in loop:
         # define transfomration parameter randomly uniform
-        max_movT = 0.2
-        alpha = 0#circlepoint_alpha[i]
-        beta = 0#circlepoint_beta[i]
-        gamma = 0 #circlepoint_gamma[i]
+
+        alpha = circlepoint_alpha[i]
+        beta = circlepoint_beta[i]
+        gamma = circlepoint_gamma[i]
 
         x = circlepoint[i][0]
         y = circlepoint[i][1]
         z = Z_sinus[i] #1000t was done with value between 7 and 10, Rot and trans between 5 10
+
+
         R = np.array([np.radians(alpha), np.radians(beta), np.radians(gamma)])  # angle in degree
         t = np.array([x, y, z])  # translation in meter
 
