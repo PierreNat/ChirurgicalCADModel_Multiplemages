@@ -89,9 +89,11 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                     optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
                     optimizer.zero_grad()
                     if (i == 0):
-                        loss = nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
+                        # loss = nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
+                        loss = nn.MSELoss()(params[i], parameter[i]).to(device)
                     else:
-                        loss = loss + nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
+                        # loss = loss + nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)
+                        loss = loss + nn.MSELoss()(params[i], parameter[i]).to(device)
                     regressionCount += 1
 
             loss.backward()

@@ -35,7 +35,7 @@ cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-fileExtension = 'translation_test_whitebckgrnd' #string to ad at the end of the file
+fileExtension = 'test' #string to ad at the end of the file
 
 cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the document name
 
