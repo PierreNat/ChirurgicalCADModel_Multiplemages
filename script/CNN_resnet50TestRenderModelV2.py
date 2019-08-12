@@ -16,6 +16,7 @@ from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
 import os
 import glob
 import argparse
+import math
 from utils_functions.R2Rmat import R2Rmat
 from numpy.random import uniform
 import matplotlib2tikz
@@ -24,7 +25,7 @@ from utils_functions.MyResnet import Myresnet50
 import imageio
 from skimage.io import imread, imsave
 from utils_functions.cubeDataset import CubeDataset
-
+pi = math.pi
 def RolAv(list, window = 2):
 
     mylist = list
@@ -152,7 +153,7 @@ testcount = 0
 Im2ShowGT = []
 Im2ShowGCP = []
 
-TestCPpara = []
+TestCPparam = []
 TestGTparam = []
 TestCPparamX = []
 TestCPparamY = []
@@ -209,19 +210,20 @@ for image, silhouette, parameter in t:
         imsave('/tmp/_tmp_%04d.png' % processcount, imgCP)
         processcount = processcount+1
         print(processcount)
-        TestCPparamX.extend(params[i, 3].detach().cpu().numpy())
-        TestCPparamY.extend(params[i, 4].detach().cpu().numpy())
-        TestCPparamZ.extend(params[i, 5].detach().cpu().numpy())
-        TestCPparamA.extend(params[i, 0].detach().cpu().numpy())
-        TestCPparamB.extend(params[i, 1].detach().cpu().numpy())
-        TestCPparamC.extend(params[i, 2].detach().cpu().numpy())
+        print(params[i, 3])
+        TestCPparamX.append(params[i, 3].detach().cpu().numpy())
+        TestCPparamY.append(params[i, 4].detach().cpu().numpy())
+        TestCPparamZ.append(params[i, 5].detach().cpu().numpy())
+        TestCPparamA.append(params[i, 0].detach().cpu().numpy())
+        TestCPparamB.append(params[i, 1].detach().cpu().numpy())
+        TestCPparamC.append(params[i, 2].detach().cpu().numpy())
 
-        TestGTparamX.extend(parameter[i, 3].detach().cpu().numpy())
-        TestGTparamY.extend(parameter[i, 4].detach().cpu().numpy())
-        TestGTparamZ.extend(parameter[i, 5].detach().cpu().numpy())
-        TestGTparamA.extend(parameter[i, 0].detach().cpu().numpy())
-        TestGTparamB.extend(parameter[i, 1].detach().cpu().numpy())
-        TestGTparamC.extend(parameter[i, 2].detach().cpu().numpy())
+        TestGTparamX.append(parameter[i, 3].detach().cpu().numpy())
+        TestGTparamY.append(parameter[i, 4].detach().cpu().numpy())
+        TestGTparamZ.append(parameter[i, 5].detach().cpu().numpy())
+        TestGTparamA.append(parameter[i, 0].detach().cpu().numpy())
+        TestGTparamB.append(parameter[i, 1].detach().cpu().numpy())
+        TestGTparamC.append(parameter[i, 2].detach().cpu().numpy())
 
     images_losses.append(loss.detach().cpu().numpy())
 
@@ -239,7 +241,7 @@ make_gif(args.filename_output)
 # ----------- plot some result from the last epoch computation ------------------------
 
     # print(np.shape(LastEpochTestCPparam)[0])
-
+print(np.shape(TestGTparamX)[0])
 nim = 5
 for i in range(0, nim):
     print('saving image to show')
@@ -281,40 +283,40 @@ plt.savefig('results/ResultSequenceRenderTest/image_render_{}batch_{}_{}.pdf'.fo
 # #----------- plot ground truth with computed for all 6 parameters -----------------------------------------------------
 
 fig, (px, pz, py, pa, pb, pg) = plt.subplots(nrows=1, ncols=6, figsize=(15, 15))  # largeur hauteur
-px.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][0], color = 'g')
+px.plot(np.arange(np.shape(TestGTparamX)[0]), TestGTparamX, color = 'g')
 px.set(ylabel='position [cm]')
 px.set(xlabel='frame no')
 px.set_ylim([-1.5, 1.5])
 px.set_title('Translation X')
 
-py.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][4], color = 'g')
+py.plot(np.arange(np.shape(TestGTparamY)[0]), TestGTparamY, color = 'g')
 py.set(ylabel='position [cm]')
 py.set(xlabel='frame no')
 py.set_ylim([-1.5, 1.5])
 py.set_title('Translation Y')
 
-pz.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][6], color = 'g')
+pz.plot(np.arange(np.shape(TestGTparamZ)[0]), TestGTparamZ, color = 'g')
 pz.set(ylabel='position [cm]')
 pz.set(xlabel='frame no')
 pz.set_ylim([-1.5, 1.5])
 pz.set_title('Translation Z')
 
-pa.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][0], color = 'g')
+pa.plot(np.arange(np.shape(TestGTparamA)[0]), TestGTparamA, color = 'g')
 pa.set(ylabel='angle [deg]')
 pa.set(xlabel='frame no')
-pa.set_ylim([0, 360])
+pa.set_ylim([- math.pi, pi])
 pa.set_title('Wrist Alpha Rotation')
 
-pb.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][1], color = 'g')
+pb.plot(np.arange(np.shape(TestGTparamB)[0]), TestGTparamB, color = 'g')
 pb.set(ylabel='angle [deg]')
 pb.set(xlabel='frame no')
-pb.set_ylim([0, 360])
+pb.set_ylim([- math.pi, pi])
 pb.set_title('Wrist Beta Rotation')
 
-pg.plot(np.arange(np.shape(TestGTparam)[0]), (TestGTparam)[:][2], color = 'g')
+pg.plot(np.arange(np.shape(TestGTparamC)[0]), TestGTparamC, color = 'g')
 pg.set(ylabel='angle [deg]')
 pg.set(xlabel='frame no')
-pg.set_ylim([0, 360])
+pg.set_ylim([- math.pi, pi])
 pg.set_title('Wrist Gamma Rotation')
 
 
