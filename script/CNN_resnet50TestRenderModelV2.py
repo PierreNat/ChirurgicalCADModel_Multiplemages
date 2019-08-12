@@ -13,6 +13,11 @@ import  matplotlib
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
+import os
+import glob
+import argparse
+from skimage.io import imread, imsave
+from utils_functions.MyResnet import Myresnet50
 from utils_functions.render1item import render_1_image
 from utils_functions.resnet50 import resnet50
 from utils_functions.testRender import testRenderResnet
@@ -68,26 +73,6 @@ test_dataset = CubeDataset(test_im, test_sil, test_param, transforms)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 
-# for image, sil, param in train_dataloader:
-#
-# #plot silhouette
-#     print(image.size(), sil.size(), param.size()) #torch.Size([batch, 3, 512, 512]) torch.Size([batch, 6])
-#     im = 0
-#     print(param[im])  # parameter in form tensor([2.5508, 0.0000, 0.0000, 0.0000, 0.0000, 5.0000])
-#
-#     image2show = image[im]  # indexing random  one image
-#     print(image2show.size()) #torch.Size([3, 512, 512])
-#     plt.imshow((image2show * 0.5 + 0.5).numpy().transpose(1, 2, 0))
-#     plt.show()
-#
-#     image2show = sil[im]  # indexing random  one image
-#     print(image2show.size())  # torch.Size([3, 512, 512])
-#     image2show = image2show.numpy()
-#     plt.imshow(image2show, cmap='gray')
-#     plt.show()
-#
-#     break  # break here just to show 1 batch of data
-
 
 # for image, sil, param in test_dataloader:
 #
@@ -112,6 +97,25 @@ test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
 
 #  ------------------------------------------------------------------
 # Setup the model
+current_dir = os.path.dirname(os.path.realpath(__file__))
+result_dir = os.path.join(current_dir, 'results/ResultSequenceRenderTest')
+data_dir = os.path.join(current_dir, 'data')
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-io', '--filename_obj', type=str, default=os.path.join(data_dir, '{}.obj'.format(obj_name)))
+parser.add_argument('-or', '--filename_output', type=str,default=os.path.join(data_dir, 'ResultRender_{}.gif'.format(file_name_extension)))
+parser.add_argument('-mr', '--make_reference_image', type=int, default=0)
+parser.add_argument('-g', '--gpu', type=int, default=0)
+args = parser.parse_args()
+
+model = Myresnet50(filename_obj=args.filename_obj)
+
+model.to(device)
+
+
+
+
+
 
 
 model = resnet50(cifar=False, modelName=modelName) #train with the saved model from the training script
