@@ -53,10 +53,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-modelName = '0epoch_080819_test_TempModel_train_cubes_wrist1im_Head_10000dataset_t_6batchs_1epochs_Noise0.0_test_RenderRegr'
+modelName = 'Ubelix_Lr0_001BCE2take2_Render_11epoch_081219_Ubelix_Lr0_001BCE2take2_Render_TempModel_train_cubes_wrist1im_Head_10000dataset0_180_M2_2_5_8_8batchs_30epochs_Noise0.0_Render'
 
 
-file_name_extension = 'wrist1im_Head_1000img_sequence_Translation'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_1000img_sequence_Translation2'  # choose the corresponding database to use
 
 batch_size = 4
 
@@ -81,10 +81,17 @@ sils = np.load(silhouettes_file)
 params = np.load(parameters_file)
 
 #  ------------------------------------------------------------------
-test = 4
-test_im = cubes[:test]
-test_sil = sils[:test]
-test_param = params[:test]
+
+# test = 4
+# test_im = cubes[:test]
+# test_sil = sils[:test]
+# test_param = params[:test]
+# number_testn_im = np.shape(test_im)[0]
+
+
+test_im = cubes
+test_sil = sils
+test_param = params
 number_testn_im = np.shape(test_im)[0]
 
 #  ------------------------------------------------------------------
@@ -208,6 +215,14 @@ for image, silhouette, parameter in t:
 
         loss = nn.BCELoss()(current_sil, current_GT_sil).to(device)
         imsave('/tmp/_tmp_%04d.png' % processcount, imgCP)
+
+        # check some image
+        # if(processcount % 250 == 0):
+        #     fig = plt.figure()
+        #     plt.imshow(imgCP)
+        #     plt.show()
+        #     plt.close(fig)
+
         processcount = processcount+1
         print(processcount)
         print(params[i, 3])
@@ -224,6 +239,8 @@ for image, silhouette, parameter in t:
         TestGTparamA.append(parameter[i, 0].detach().cpu().numpy())
         TestGTparamB.append(parameter[i, 1].detach().cpu().numpy())
         TestGTparamC.append(parameter[i, 2].detach().cpu().numpy())
+
+
 
     images_losses.append(loss.detach().cpu().numpy())
 
@@ -282,39 +299,49 @@ plt.savefig('results/ResultSequenceRenderTest/image_render_{}batch_{}_{}.pdf'.fo
 
 # #----------- plot ground truth with computed for all 6 parameters -----------------------------------------------------
 
-fig, (px, pz, py, pa, pb, pg) = plt.subplots(nrows=1, ncols=6, figsize=(15, 15))  # largeur hauteur
-px.plot(np.arange(np.shape(TestGTparamX)[0]), TestGTparamX, color = 'g')
+fig, (px, py, pz, pa, pb, pg) = plt.subplots(nrows=1, ncols=6, figsize=(15, 15))  # largeur hauteur
+
+TestCPparamX = RolAv(TestCPparamX, window=10)
+px.plot(np.arange(np.shape(TestGTparamX)[0]), TestGTparamX, color = 'r', linestyle= '--')
+px.plot(np.arange(np.shape(TestCPparamX)[0]), TestCPparamX, color = 'b')
 px.set(ylabel='position [cm]')
 px.set(xlabel='frame no')
-px.set_ylim([-1.5, 1.5])
+px.set_ylim([-2, 2])
 px.set_title('Translation X')
 
-py.plot(np.arange(np.shape(TestGTparamY)[0]), TestGTparamY, color = 'g')
+TestCPparamY = RolAv(TestCPparamY, window=10)
+py.plot(np.arange(np.shape(TestGTparamY)[0]), TestGTparamY, color = 'r', linestyle= '--')
+py.plot(np.arange(np.shape(TestCPparamY)[0]), TestCPparamY, color = 'b')
 py.set(ylabel='position [cm]')
 py.set(xlabel='frame no')
-py.set_ylim([-1.5, 1.5])
+py.set_ylim([-2, 2])
 py.set_title('Translation Y')
 
-pz.plot(np.arange(np.shape(TestGTparamZ)[0]), TestGTparamZ, color = 'g')
+TestCPparamZ = RolAv(TestCPparamZ, window=10)
+pz.plot(np.arange(np.shape(TestGTparamZ)[0]), TestGTparamZ, color = 'r', linestyle= '--')
+pz.plot(np.arange(np.shape(TestCPparamZ)[0]), TestCPparamZ, color = 'b')
 pz.set(ylabel='position [cm]')
 pz.set(xlabel='frame no')
-pz.set_ylim([-1.5, 1.5])
+pz.set_ylim([4, 8])
 pz.set_title('Translation Z')
 
-pa.plot(np.arange(np.shape(TestGTparamA)[0]), TestGTparamA, color = 'g')
-pa.set(ylabel='angle [deg]')
+pa.plot(np.arange(np.shape(TestGTparamA)[0]), TestGTparamA, color = 'r', linestyle= '--')
+pa.plot(np.arange(np.shape(TestCPparamA)[0]), TestCPparamA, color = 'b')
+pa.set(ylabel='angle [rad]')
 pa.set(xlabel='frame no')
 pa.set_ylim([- math.pi, pi])
 pa.set_title('Wrist Alpha Rotation')
 
-pb.plot(np.arange(np.shape(TestGTparamB)[0]), TestGTparamB, color = 'g')
-pb.set(ylabel='angle [deg]')
+pb.plot(np.arange(np.shape(TestGTparamB)[0]), TestGTparamB, color = 'r', linestyle= '--')
+pb.plot(np.arange(np.shape(TestCPparamB)[0]), TestCPparamB, color = 'b')
+pb.set(ylabel='angle [rad]')
 pb.set(xlabel='frame no')
 pb.set_ylim([- math.pi, pi])
 pb.set_title('Wrist Beta Rotation')
 
-pg.plot(np.arange(np.shape(TestGTparamC)[0]), TestGTparamC, color = 'g')
-pg.set(ylabel='angle [deg]')
+pg.plot(np.arange(np.shape(TestGTparamC)[0]), TestGTparamC, color = 'r', linestyle= '--')
+pg.plot(np.arange(np.shape(TestCPparamC)[0]), TestCPparamC, color = 'b')
+pg.set(ylabel='angle [rad]')
 pg.set(xlabel='frame no')
 pg.set_ylim([- math.pi, pi])
 pg.set_title('Wrist Gamma Rotation')

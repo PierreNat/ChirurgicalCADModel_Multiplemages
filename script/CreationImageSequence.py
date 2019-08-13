@@ -52,7 +52,7 @@ def main():
 
     nb_im = 1000
 
-    file_name_extension = 'wrist1im_Head_{}img_sequence_RotationTranslation'.format(nb_im)
+    file_name_extension = 'wrist1im_Head_{}img_sequence_Translation2'.format(nb_im)
     parser = argparse.ArgumentParser()
     parser.add_argument('-or', '--filename_output', type=str, default=os.path.join(result_dir, 'Animation_{}.gif'.format(file_name_extension)))
     args = parser.parse_args()
@@ -73,7 +73,7 @@ def main():
     prevG = 0
     circlepoint = PointsInCircum(1.5, nb_im)
 
-    Z_sinus = np.linspace(0, 10*nb_im, nb_im)
+    Z_sinus = np.linspace(0, 360, nb_im)
     Z_sinus = 6 + np.sin(np.radians(Z_sinus))
     circlepoint_alpha = np.linspace(0, 360, nb_im)
     circlepoint_beta = np.linspace(0, 360, nb_im)
@@ -85,9 +85,9 @@ def main():
     for i in loop:
         # define transfomration parameter randomly uniform
 
-        alpha = circlepoint_alpha[i]
-        beta = circlepoint_beta[i]
-        gamma = circlepoint_gamma[i]
+        alpha = 0 #circlepoint_alpha[i]
+        beta = 0 #circlepoint_beta[i]
+        gamma = 0 #circlepoint_gamma[i]
 
         x = circlepoint[i][0]
         y = circlepoint[i][1]

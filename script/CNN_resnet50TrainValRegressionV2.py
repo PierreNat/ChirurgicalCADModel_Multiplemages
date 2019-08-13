@@ -21,11 +21,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-file_name_extension = 'wrist1im_Head_5000dataset'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_15000datasetTranslationM15_15_5_7'  # choose the corresponding database to use
 
 batch_size = 4
 
-n_epochs = 25
+n_epochs = 30
 
 target_size = (512, 512)
 
