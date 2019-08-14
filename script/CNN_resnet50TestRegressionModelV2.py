@@ -11,6 +11,7 @@ import numpy as np
 from tqdm import tqdm
 import  matplotlib
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor, Compose, Normalize, Lambda
 import os
@@ -53,14 +54,15 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-modelName = 'Ubelix_Lr0_0001BCE15000Translation_6epoch_081219_Ubelix_Lr0_0001BCE15000Translation_TempModel_train_cubes_wrist1im_Head_15000datasetTranslationM15_15_5_7_8batchs_40epochs_Noise0.0_Render'
-
+n_epochs = 10
+modelName = 'TranslationRegression_{}epoch_081319_TranslationRegression_TempModel_train_cubes_wrist1im_Head_10000datasetTranslationM15_15_5_7_4batchs_30epochs_Noise0.0_Regression'.format(n_epochs)
 
 file_name_extension = 'wrist1im_Head_1000img_sequence_Translation2'  # choose the corresponding database to use
 
 batch_size = 4
 
-n_epochs = 1
+# a = np.array([1,2,3,4,5])
+# print(np.std(a))
 
 target_size = (512, 512)
 
@@ -69,9 +71,9 @@ cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-fileExtension = 'RenderTranslation' #string to ad at the end of the file
+fileExtension = 'regressionAfter_{}epochs'.format(n_epochs) #string to ad at the end of the file
 
-date4File = '080819_{}'.format(fileExtension) #mmddyy
+date4File = '081419_{}'.format(fileExtension) #mmddyy
 
 obj_name = 'wrist'
 
@@ -82,7 +84,7 @@ params = np.load(parameters_file)
 
 #  ------------------------------------------------------------------
 
-# test = 4
+# test = 5
 # test_im = cubes[:test]
 # test_sil = sils[:test]
 # test_param = params[:test]
@@ -295,18 +297,19 @@ for i in range(0, nim):
     plt.xticks([0, 512])
     plt.yticks([])
 
-plt.savefig('results/ResultSequenceRenderTest/image_render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
+plt.show()
+plt.savefig('results/ResultSequenceRegressionTest/image_render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
 
-# #----------- plot ground truth with computed for all 6 parameters -----------------------------------------------------
+## ----------- translation plot ------------------------------------------------------------------------------------------
 
-fig, (px, py, pz) = plt.subplots(nrows=1, ncols=3, figsize=(15, 15))  # largeur hauteur
-fig.suptitle("Render Model Test, Translation, Red = Ground Truth, Blue = Tracking", fontsize=14)
+fig, (px, py, pz) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))  # largeur hauteur
+fig.suptitle("Regression Model Test after {} epochs, Translation, Red = Ground Truth, Blue = Tracking".format(n_epochs), fontsize=6)
 
 # TestCPparamX = RolAv(TestCPparamX, window=10)
 px.plot(np.arange(np.shape(TestGTparamX)[0]), TestGTparamX, color = 'r', linestyle= '--')
 px.plot(np.arange(np.shape(TestCPparamX)[0]), TestCPparamX, color = 'b')
 px.set(ylabel='position [cm]')
-px.set(xlabel='frame no')
+px.set(xlabel='frame no.')
 px.set_ylim([-2, 2])
 px.set_title('Translation X')
 
@@ -314,51 +317,94 @@ px.set_title('Translation X')
 # TestCPparamY = RolAv(TestCPparamY, window=10)
 py.plot(np.arange(np.shape(TestGTparamY)[0]), TestGTparamY, color = 'r', linestyle= '--', label="Ground Truth")
 py.plot(np.arange(np.shape(TestCPparamY)[0]), TestCPparamY, color = 'b', label="Ground Truth")
-py.set(ylabel='position [cm]')
-py.set(xlabel='frame no')
+# py.set(ylabel='position [cm]')
+py.set(xlabel='frame no.')
 py.set_ylim([-2, 2])
 py.set_title('Translation Y')
 
 # TestCPparamZ = RolAv(TestCPparamZ, window=10)
 pz.plot(np.arange(np.shape(TestGTparamZ)[0]), TestGTparamZ, color = 'r', linestyle= '--')
 pz.plot(np.arange(np.shape(TestCPparamZ)[0]), TestCPparamZ, color = 'b')
-pz.set(ylabel='position [cm]')
-pz.set(xlabel='frame no')
+# pz.set(ylabel='position [cm]')
+pz.set(xlabel='frame no.')
 pz.set_ylim([4, 8])
 pz.set_title('Translation Z')
 
+plt.show()
+# fig.savefig('results/ResultSequenceRegressionTest/RegressionTestTranslation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+fig.savefig('results/ResultSequenceRegressionTest/RegressionTestTranslation_{}.png'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+matplotlib2tikz.save("results/ResultSequenceRegressionTest/RegressionTestTranslation_{}.tex".format(fileExtension),figureheight='5cm', figurewidth='5cm')
 
+## ----------- rotation plot ------------------------------------------------------------------------------------------
 
-fig2, (pa, pb, pg) = plt.subplots(nrows=1, ncols=3, figsize=(15, 15))  # largeur hauteur
-fig.suptitle("Render Model Test, Rotation, Red = Ground Truth, Blue = Tracking", fontsize=14)
+fig2, (pa, pb, pg) = plt.subplots(nrows=1, ncols=3)  # largeur hauteur
+fig.suptitle("Regression Model Test after {} epochs, Rotation, Red = Ground Truth, Blue = Tracking".format(n_epochs), fontsize=14)
 
 pa.plot(np.arange(np.shape(TestGTparamA)[0]), TestGTparamA, color = 'r', linestyle= '--')
 pa.plot(np.arange(np.shape(TestCPparamA)[0]), TestCPparamA, color = 'b')
 pa.set(ylabel='angle [rad]')
-pa.set(xlabel='frame no')
+pa.set(xlabel='frame no.')
 pa.set_ylim([- math.pi, pi])
 pa.set_title('Wrist Alpha Rotation')
 
 pb.plot(np.arange(np.shape(TestGTparamB)[0]), TestGTparamB, color = 'r', linestyle= '--')
 pb.plot(np.arange(np.shape(TestCPparamB)[0]), TestCPparamB, color = 'b')
-pb.set(ylabel='angle [rad]')
-pb.set(xlabel='frame no')
+# pb.set(ylabel='angle [rad]')
+pb.set(xlabel='frame no.')
 pb.set_ylim([- math.pi, pi])
 pb.set_title('Wrist Beta Rotation')
 
 pg.plot(np.arange(np.shape(TestGTparamC)[0]), TestGTparamC, color = 'r', linestyle= '--')
 pg.plot(np.arange(np.shape(TestCPparamC)[0]), TestCPparamC, color = 'b')
-pg.set(ylabel='angle [rad]')
-pg.set(xlabel='frame no')
+# pg.set(ylabel='angle [rad]')
+pg.set(xlabel='frame no.')
 pg.set_ylim([- math.pi, pi])
 pg.set_title('Wrist Gamma Rotation')
 
-plt.show()
-fig.savefig('results/ResultSequenceRenderTest/RenderTest_{}.pdf'.format(fileExtension))
-matplotlib2tikz.save("results/ResultSequenceRenderTest/RenderTest_{}.tex".format(fileExtension))
 
+plt.show()
+# fig2.savefig('results/ResultSequenceRegressionTest/RegressionTestRotation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+fig2.savefig('results/ResultSequenceRegressionTest/RegressionTestRotation_{}.png'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+matplotlib2tikz.save("results/ResultSequenceRegressionTest/RegressionTestRotation_{}.tex".format(fileExtension),figureheight='5cm', figurewidth='5cm')
+
+
+## ----------- error plot ------------------------------------------------------------------------------------------
+
+fig3, (pxe, pye, pze) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))  # largeur hauteur
+
+test = np.asarray(TestGTparamX)
+
+# TestCPparamX = RolAv(TestCPparamX, window=10)
+pxe.plot(np.arange(np.shape(TestCPparamX)[0]),np.abs(np.asarray(TestGTparamX)-np.asarray(TestCPparamX)), color = 'b')
+pxe.set(ylabel='error [cm]')
+pxe.set(xlabel='frame no.')
+pxe.set_ylim([0, 1])
+pxe.set_title('Error X')
+
+
+# TestCPparamY = RolAv(TestCPparamY, window=10)
+
+pye.plot(np.arange(np.shape(TestCPparamY)[0]), np.abs(np.asarray(TestGTparamY)-np.asarray(TestCPparamY)), color = 'b')
+# py.set(ylabel='position [cm]')
+pye.set(xlabel='error no.')
+pye.set_ylim([0, 1])
+pye.set_title('Error Y')
+
+# TestCPparamZ = RolAv(TestCPparamZ, window=10)
+
+pze.plot(np.arange(np.shape(TestCPparamZ)[0]), np.abs(np.asarray(TestGTparamZ)-np.asarray(TestCPparamZ)), color = 'b')
+# pz.set(ylabel='position [cm]')
+pze.set(xlabel='frame no.')
+pze.set_ylim([0,1])
+pze.set_title('Error Z')
+
+plt.show()
+# fig3.savefig('results/ResultSequenceRegressionTest/RegressionTestErrorTranslation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+fig3.savefig('results/ResultSequenceRegressionTest/RegressionTestErrorTranslation_{}.png'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+matplotlib2tikz.save("results/ResultSequenceRegressionTest/RegressionTestErrorTranslation_{}.tex".format(fileExtension),figureheight='5cm', figurewidth='5cm')
 
 print("computing prediction done in  {} seconds ---".format(time.time() - start_time))
+
 
 
 

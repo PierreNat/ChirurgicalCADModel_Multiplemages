@@ -83,6 +83,14 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
         epochValloss = np.mean(current_step_loss)
         current_step_loss = []
         Epoch_Val_losses.append(epochValloss)  # most significant value to store
+
+        torch.save(model.state_dict(),
+                   'models/{}_{}epoch_{}_TempModel_train_{}_{}batchs_{}epochs_Noise{}_Regression.pth'.format(fileExtension, epoch, date4File,
+                                                                                                      cubeSetName,
+                                                                                                      str(batch_size),
+                                                                                                      str(n_epochs),
+                                                                                                      noise * 100,
+                                                                                                      ))
         # print(epochValloss)
 
         # validation phase

@@ -29,7 +29,7 @@ def main():
     print(vertices_1.shape)
     print(faces_1.shape)
 
-    file_name_extension = 'wrist1im_Head_10000dataset0_360_M2_2_5_8'
+    file_name_extension = 'wrist1im_Head_10000datasetRotationTranslationM15_15_5_7'
 
 
 
@@ -48,12 +48,12 @@ def main():
     loop = tqdm.tqdm(range(0, nb_im))
     for i in loop:
         # define transfomration parameter randomly uniform
-        alpha =uniform(0, 180)
-        beta = uniform(0, 180)
-        gamma = uniform(0, 180)
-        x = uniform(-2, 2)
-        y = uniform(-2, 2)
-        z = uniform(5, 8) #1000t was done with value between 7 and 10, Rot and trans between 5 10
+        alpha = uniform(0, 360)
+        beta = uniform(0, 360)
+        gamma = uniform(0, 360)
+        x = uniform(-1.5, 1.5)
+        y = uniform(-1.5, 1.5)
+        z = uniform(5, 7) #1000t was done with value between 7 and 10, Rot and trans between 5 10
         R = np.array([np.radians(alpha), np.radians(beta), np.radians(gamma)])  # angle in degree
         t = np.array([x, y, z])  # translation in meter
 
