@@ -375,7 +375,8 @@ fig3, (pxe, pye, pze) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))  # largeu
 test = np.asarray(TestGTparamX)
 
 # TestCPparamX = RolAv(TestCPparamX, window=10)
-pxe.plot(np.arange(np.shape(TestCPparamX)[0]),np.abs(np.asarray(TestGTparamX)-np.asarray(TestCPparamX)), color = 'b')
+ErrorX = np.asarray(TestGTparamX)-np.asarray(TestCPparamX)
+pxe.plot(np.arange(np.shape(TestCPparamX)[0]),np.abs(ErrorX), color = 'b')
 pxe.set(ylabel='error [cm]')
 pxe.set(xlabel='frame no.')
 pxe.set_ylim([0, 1])
@@ -383,16 +384,16 @@ pxe.set_title('Error X')
 
 
 # TestCPparamY = RolAv(TestCPparamY, window=10)
-
-pye.plot(np.arange(np.shape(TestCPparamY)[0]), np.abs(np.asarray(TestGTparamY)-np.asarray(TestCPparamY)), color = 'b')
+ErrorY = np.asarray(TestGTparamY)-np.asarray(TestCPparamY)
+pye.plot(np.arange(np.shape(TestCPparamY)[0]), np.abs(ErrorY), color = 'b')
 # py.set(ylabel='position [cm]')
 pye.set(xlabel='error no.')
 pye.set_ylim([0, 1])
 pye.set_title('Error Y')
 
 # TestCPparamZ = RolAv(TestCPparamZ, window=10)
-
-pze.plot(np.arange(np.shape(TestCPparamZ)[0]), np.abs(np.asarray(TestGTparamZ)-np.asarray(TestCPparamZ)), color = 'b')
+ErrorZ = np.asarray(TestGTparamZ)-np.asarray(TestCPparamZ)
+pze.plot(np.arange(np.shape(TestCPparamZ)[0]), np.abs(ErrorZ), color = 'b')
 # pz.set(ylabel='position [cm]')
 pze.set(xlabel='frame no.')
 pze.set_ylim([0,1])
