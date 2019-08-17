@@ -320,7 +320,7 @@ for i in range(0, nim):
     plt.yticks([])
 
 plt.show()
-plt.savefig('{}/image_render_{}batch_after{}epochs_{}.pdf'.format(output_dir_results, batch_size, n_epochs, fileExtension))
+plt.savefig('{}/image_render_{}batch_after{}epochs_{}.pdf'.format(output_dir_results, batch_size, n_epochs, fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
 
 ## ----------- translation plot ------------------------------------------------------------------------------------------
 
@@ -359,7 +359,7 @@ matplotlib2tikz.save("{}/RenderTestTranslation_{}.tex".format(output_dir_results
 
 ## ----------- rotation plot ------------------------------------------------------------------------------------------
 
-fig2, (pa, pb, pg) = plt.subplots(nrows=1, ncols=3)  # largeur hauteur
+fig2, (pa, pb, pg) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))  # largeur hauteur
 fig.suptitle("Render Model Test after {} epochs, Rotation, Red = Ground Truth, Blue = Tracking".format(n_epochs), fontsize=14)
 
 pa.plot(np.arange(np.shape(TestGTparamA)[0]), TestGTparamA, color = 'r', linestyle= '--')
@@ -425,6 +425,43 @@ plt.show()
 # fig3.savefig('results/ResultSequenceRenderTest/RenderTestErrorTranslation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
 fig3.savefig('{}/RenderTestErrorTranslation_{}.png'.format(output_dir_results,fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
 matplotlib2tikz.save("{}/RenderTestErrorTranslation_{}.tex".format(output_dir_results,fileExtension),figureheight='5cm', figurewidth='5cm')
+
+
+## ----------- error plot rotation------------------------------------------------------------------------------------------
+
+fig4, (pae, pbe, pce) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))  # largeur hauteur
+
+# test = np.asarray(TestGTparamX)
+
+# TestCPparamX = RolAv(TestCPparamX, window=10)
+ErrorA = np.asarray(TestGTparamA)-np.asarray(TestCPparamA)
+pae.plot(np.arange(np.shape(TestCPparamA)[0]),np.abs(ErrorA), color = 'b')
+pae.set(ylabel='error [rad]')
+pae.set(xlabel='frame no.')
+pae.set_ylim([0, 0.1])
+pae.set_title('Err. Alpha')
+
+
+# TestCPparamY = RolAv(TestCPparamY, window=10)
+ErrorB = np.asarray(TestGTparamB)-np.asarray(TestCPparamB)
+pbe.plot(np.arange(np.shape(TestCPparamB)[0]), np.abs(ErrorB), color = 'b')
+# py.set(ylabel='position [cm]')
+pbe.set(xlabel='frame no.')
+pbe.set_ylim([0, 0.1])
+pbe.set_title('Err. Beta')
+
+# TestCPparamZ = RolAv(TestCPparamZ, window=10)
+ErrorC = np.asarray(TestGTparamC)-np.asarray(TestCPparamC)
+pce.plot(np.arange(np.shape(TestCPparamC)[0]), np.abs(ErrorC), color = 'b')
+# pz.set(ylabel='position [cm]')
+pce.set(xlabel='frame no.')
+pce.set_ylim([0,0.1])
+pce.set_title('Err. Gamma')
+
+plt.show()
+# fig3.savefig('results/ResultSequenceRegressionTest/RegressionTestErrorTranslation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+fig4.savefig('{}/RenderTestErrorRotation_{}.png'.format(output_dir_results,fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+matplotlib2tikz.save("{}/RenderTestErrorRotation_{}.tex".format(output_dir_results, fileExtension),figureheight='5cm', figurewidth='5cm')
 
 print("computing prediction done in  {} seconds ---".format(time.time() - start_time))
 
