@@ -27,6 +27,21 @@ import imageio
 from skimage.io import imread, imsave
 from utils_functions.cubeDataset import CubeDataset
 pi = math.pi
+
+def mkdir_p(mypath):
+    '''Creates a directory. equivalent to using mkdir -p on the command line'''
+
+    from errno import EEXIST
+    from os import makedirs,path
+
+    try:
+        makedirs(mypath)
+    except OSError as exc: # Python >2.5
+        if exc.errno == EEXIST and path.isdir(mypath):
+            pass
+        else: raise
+
+
 def RolAv(list, window = 2):
 
     mylist = list
@@ -54,7 +69,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-n_epochs = 10
+n_epochs = 7
 modelName = 'TranslationRegression_{}epoch_081319_TranslationRegression_TempModel_train_cubes_wrist1im_Head_10000datasetTranslationM15_15_5_7_4batchs_30epochs_Noise0.0_Regression'.format(n_epochs)
 
 file_name_extension = 'wrist1im_Head_1000img_sequence_Translation2'  # choose the corresponding database to use
@@ -71,9 +86,9 @@ cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-fileExtension = 'regressionAfter_{}epochs'.format(n_epochs) #string to ad at the end of the file
-
-date4File = '081419_{}'.format(fileExtension) #mmddyy
+date4File = '080819' #mmddyy
+fileExtension = '{}_TEST_RegressionRotationTranslation_epoch{}_360deg'.format(date4File,n_epochs) #string to ad at the end of the file
+print(fileExtension)
 
 obj_name = 'wrist'
 
@@ -128,8 +143,15 @@ test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
 
 #  ------------------------------------------------------------------
 # Setup the model
+
+output_dir_model = 'models/regression/{}'.format(fileExtension)
+mkdir_p(output_dir_model)
+output_dir_results = 'results/regression/{}'.format(fileExtension)
+mkdir_p(output_dir_results)
+
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
-result_dir = os.path.join(current_dir, 'results/ResultSequenceRenderTest')
+result_dir = os.path.join(current_dir, output_dir_results)
 data_dir = os.path.join(current_dir, 'data')
 
 parser = argparse.ArgumentParser()
@@ -298,7 +320,7 @@ for i in range(0, nim):
     plt.yticks([])
 
 plt.show()
-plt.savefig('results/ResultSequenceRegressionTest/image_render_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
+plt.savefig('{}/image_render_{}batch_after{}epochs_{}.pdf'.format(output_dir_results, batch_size, n_epochs, fileExtension))
 
 ## ----------- translation plot ------------------------------------------------------------------------------------------
 
@@ -332,8 +354,8 @@ pz.set_title('Translation Z')
 
 plt.show()
 # fig.savefig('results/ResultSequenceRegressionTest/RegressionTestTranslation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
-fig.savefig('results/ResultSequenceRegressionTest/RegressionTestTranslation_{}.png'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
-matplotlib2tikz.save("results/ResultSequenceRegressionTest/RegressionTestTranslation_{}.tex".format(fileExtension),figureheight='5cm', figurewidth='5cm')
+fig.savefig('{}/RegressionTestTranslation_{}.png'.format(output_dir_results,fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+matplotlib2tikz.save("{}/RegressionTestTranslation_{}.tex".format(output_dir_results,fileExtension),figureheight='5cm', figurewidth='5cm')
 
 ## ----------- rotation plot ------------------------------------------------------------------------------------------
 
@@ -364,8 +386,8 @@ pg.set_title('Wrist Gamma Rotation')
 
 plt.show()
 # fig2.savefig('results/ResultSequenceRegressionTest/RegressionTestRotation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
-fig2.savefig('results/ResultSequenceRegressionTest/RegressionTestRotation_{}.png'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
-matplotlib2tikz.save("results/ResultSequenceRegressionTest/RegressionTestRotation_{}.tex".format(fileExtension),figureheight='5cm', figurewidth='5cm')
+fig2.savefig('{}/RegressionTestRotation_{}.png'.format(output_dir_results,fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+matplotlib2tikz.save("{}/RegressionTestRotation_{}.tex".format(output_dir_results,fileExtension),figureheight='5cm', figurewidth='5cm')
 
 
 ## ----------- error plot ------------------------------------------------------------------------------------------
@@ -401,8 +423,8 @@ pze.set_title('Error Z')
 
 plt.show()
 # fig3.savefig('results/ResultSequenceRegressionTest/RegressionTestErrorTranslation_{}.pdf'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
-fig3.savefig('results/ResultSequenceRegressionTest/RegressionTestErrorTranslation_{}.png'.format(fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
-matplotlib2tikz.save("results/ResultSequenceRegressionTest/RegressionTestErrorTranslation_{}.tex".format(fileExtension),figureheight='5cm', figurewidth='5cm')
+fig3.savefig('{}/RegressionTestErrorTranslation_{}.png'.format(output_dir_results,fileExtension), bbox_inches = 'tight', pad_inches = 0.05)
+matplotlib2tikz.save("{}/RegressionTestErrorTranslation_{}.tex".format(output_dir_results, fileExtension),figureheight='5cm', figurewidth='5cm')
 
 print("computing prediction done in  {} seconds ---".format(time.time() - start_time))
 

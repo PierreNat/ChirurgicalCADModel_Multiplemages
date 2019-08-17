@@ -52,7 +52,7 @@ def main():
 
     nb_im = 1000
 
-    file_name_extension = 'wrist1im_Head_{}img_sequence_Translation2'.format(nb_im)
+    file_name_extension = 'wrist1im_Head_{}img_sequence_RotationTranslation'.format(nb_im)
     parser = argparse.ArgumentParser()
     parser.add_argument('-or', '--filename_output', type=str, default=os.path.join(result_dir, 'Animation_{}.gif'.format(file_name_extension)))
     args = parser.parse_args()
@@ -75,9 +75,9 @@ def main():
 
     Z_sinus = np.linspace(0, 360, nb_im)
     Z_sinus = 6 + np.sin(np.radians(Z_sinus))
-    circlepoint_alpha = np.linspace(0, 360, nb_im)
-    circlepoint_beta = np.linspace(0, 360, nb_im)
-    circlepoint_gamma = np.linspace(0, 360, nb_im)
+    circlepoint_alpha = np.linspace(0, 180, nb_im)
+    circlepoint_beta = np.linspace(0, 180, nb_im)
+    circlepoint_gamma = np.linspace(0, 180, nb_im)
     print('z axis translation min max are {} and {}'.format(Z_sinus.min(), Z_sinus.max())) #5.000000015261379 and 6.999998763828597
 
     loop = tqdm.tqdm(range(0, nb_im))
@@ -85,9 +85,9 @@ def main():
     for i in loop:
         # define transfomration parameter randomly uniform
 
-        alpha = 0 #circlepoint_alpha[i]
-        beta = 0 #circlepoint_beta[i]
-        gamma = 0 #circlepoint_gamma[i]
+        alpha =circlepoint_alpha[i]
+        beta = circlepoint_beta[i]
+        gamma = circlepoint_gamma[i]
 
         x = circlepoint[i][0]
         y = circlepoint[i][1]

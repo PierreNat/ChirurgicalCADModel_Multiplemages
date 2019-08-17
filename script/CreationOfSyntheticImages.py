@@ -29,7 +29,7 @@ def main():
     print(vertices_1.shape)
     print(faces_1.shape)
 
-    file_name_extension = 'wrist1im_Head_10000datasetRotationTranslationM15_15_5_7'
+    file_name_extension = 'wrist1im_Head_10000datasetRotationTranslation0_180_M15_15_5_7'
 
 
 
@@ -48,9 +48,9 @@ def main():
     loop = tqdm.tqdm(range(0, nb_im))
     for i in loop:
         # define transfomration parameter randomly uniform
-        alpha = uniform(0, 360)
-        beta = uniform(0, 360)
-        gamma = uniform(0, 360)
+        alpha = uniform(0, 180)
+        beta = uniform(0, 180)
+        gamma = uniform(0, 180)
         x = uniform(-1.5, 1.5)
         y = uniform(-1.5, 1.5)
         z = uniform(5, 7) #1000t was done with value between 7 and 10, Rot and trans between 5 10

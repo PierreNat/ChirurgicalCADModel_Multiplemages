@@ -76,7 +76,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
 
                 if (model.t[2] > 6.9 and model.t[2] < 10.1 and torch.abs(model.t[0]) < 2.1 and torch.abs(model.t[1]) < 2.1):
                 # if (epoch > 0):
-                    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+                    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
                     optimizer.zero_grad()
                     if (i == 0):
                         loss  =  nn.BCELoss()(current_sil, current_GT_sil).to(device)
@@ -84,7 +84,7 @@ def train_renderV2(model, train_dataloader, test_dataloader,
                         loss = loss + nn.BCELoss()(current_sil, current_GT_sil).to(device)
                     renderCount += 1
                 else:
-                    optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+                    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
                     optimizer.zero_grad()
                     if (i == 0):
                         # loss = nn.MSELoss()(params[i, 3:6], parameter[i, 3:6]).to(device)

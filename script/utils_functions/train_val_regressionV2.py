@@ -168,6 +168,8 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
         plt.xticks([0, 512])
         plt.yticks([])
 
+    plt.savefig('results/image_regression_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
+
     # -----------plot and save section ------------------------------------------------------------------------------------
 
     fig, (p1, p2, p4) = plt.subplots(3, figsize=(15, 10))  # largeur hauteur
@@ -195,7 +197,7 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
 
     plt.show()
 
-    fig.savefig('results/regression_{}batch_{}.pdf'.format(batch_size, n_epochs))
+    fig.savefig('results/regression_{}batch_{}_{}.pdf'.format(batch_size, n_epochs, fileExtension))
     import matplotlib2tikz
 
-    matplotlib2tikz.save("results/regression_{}batch_{}.tex".format(batch_size, n_epochs))
+    matplotlib2tikz.save("results/regression_{}batch_{}_{}.tex".format(batch_size, n_epochs, fileExtension))
