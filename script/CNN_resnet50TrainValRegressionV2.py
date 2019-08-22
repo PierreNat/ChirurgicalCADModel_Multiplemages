@@ -25,7 +25,7 @@ print(device)
 file_name_extension = 'wrist1im_Head_10000datasetTranslationM15_15_5_7'  # choose the corresponding database to use
 batch_size = 4
 
-n_epochs = 15
+n_epochs = 10
 
 target_size = (512, 512)
 
@@ -34,11 +34,11 @@ cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-fileExtension = 'TranslationnRegression' #string to ad at the end of the file
+fileExtension = 'TranslationRegression' #string to ad at the end of the file
 
 cubeSetName = 'cubes_{}'.format(file_name_extension) #used to describe the document name
 
-date4File = '081619_{}'.format(fileExtension) #mmddyy
+date4File = '081819_{}'.format(fileExtension) #mmddyy
 
 obj_name = 'wrist'
 

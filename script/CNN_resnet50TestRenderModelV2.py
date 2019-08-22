@@ -70,11 +70,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-n_epochs = 37
-modelName = 'Ubelix_Lr0_0001BCE10000TranslationNew_{}epoch_081419_Ubelix_Lr0_0001BCE10000TranslationNew_TempModel_train_cubes_wrist1im_Head_10000datasetTranslationM15_15_5_7_8batchs_40epochs_Noise0.0_Render'.format(n_epochs)
+n_epochs = 49
+modelName = 'Ubelix_lr0_0001_15000_180_abcR_50_6param_{}epoch_082119_Ubelix_lr0_0001_15000_180_abcR_50_6param_Temp_train_cubes_wrist1im_Head_15000datasetRotationTranslationM15_15_5_7_8batchs_50epochs_Render'.format(n_epochs)
 
 
-file_name_extension = 'wrist1im_Head_1000img_sequence_Translation2'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_1000img_sequence_RotationTranslation180'  # choose the corresponding database to use
 
 batch_size = 4
 
@@ -86,8 +86,8 @@ target_size = (512, 512)
 cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
-date4File = '081719' #mmddyy
-fileExtension = '{}_TEST_RenderRotationTranslation_epoch{}_360deg'.format(date4File,n_epochs) #string to ad at the end of the file
+date4File = '082019' #mmddyy
+fileExtension = '{}_TEST_RenderRotationTranslation_epoch{}Lr0_0001_55_6param'.format(date4File,n_epochs) #string to ad at the end of the file
 
 
 
@@ -287,6 +287,7 @@ nim = 5
 for i in range(0, nim):
     print('saving image to show')
     pickim = int(uniform(0, testcount- 1))
+    print(pickim)
     # print(pickim)
 
     model.t = torch.from_numpy(TestCPparam[pickim][3:6]).to(device)
@@ -362,26 +363,29 @@ matplotlib2tikz.save("{}/RenderTestTranslation_{}.tex".format(output_dir_results
 fig2, (pa, pb, pg) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))  # largeur hauteur
 fig.suptitle("Render Model Test after {} epochs, Rotation, Red = Ground Truth, Blue = Tracking".format(n_epochs), fontsize=14)
 
+# TestCPparamA = TestCPparamA-np.mean(TestCPparamA) #use this if the rotation are a multiple of 2 pi
 pa.plot(np.arange(np.shape(TestGTparamA)[0]), TestGTparamA, color = 'r', linestyle= '--')
 pa.plot(np.arange(np.shape(TestCPparamA)[0]), TestCPparamA, color = 'b')
 pa.set(ylabel='angle [rad]')
 pa.set(xlabel='frame no.')
-pa.set_ylim([- math.pi, pi])
-pa.set_title('Wrist Alpha Rotation')
+pa.set_ylim([-pi, 2*pi])
+pa.set_title('Wrist Rotation')
 
+# TestCPparamB = TestCPparamB-np.mean(TestCPparamB)
 pb.plot(np.arange(np.shape(TestGTparamB)[0]), TestGTparamB, color = 'r', linestyle= '--')
 pb.plot(np.arange(np.shape(TestCPparamB)[0]), TestCPparamB, color = 'b')
 # pb.set(ylabel='angle [rad]')
 pb.set(xlabel='frame no.')
-pb.set_ylim([- math.pi, pi])
-pb.set_title('Wrist Beta Rotation')
+pb.set_ylim([-pi, 2*pi])
+pb.set_title('Wrist Rotation')
 
+# TestCPparamC = TestCPparamC-np.mean(TestCPparamC)
 pg.plot(np.arange(np.shape(TestGTparamC)[0]), TestGTparamC, color = 'r', linestyle= '--')
 pg.plot(np.arange(np.shape(TestCPparamC)[0]), TestCPparamC, color = 'b')
 # pg.set(ylabel='angle [rad]')
 pg.set(xlabel='frame no.')
-pg.set_ylim([- math.pi, pi])
-pg.set_title('Wrist Gamma Rotation')
+pg.set_ylim([-pi, 2*pi])
+pg.set_title('Wrist Rotation')
 
 
 plt.show()
@@ -438,7 +442,7 @@ ErrorA = np.asarray(TestGTparamA)-np.asarray(TestCPparamA)
 pae.plot(np.arange(np.shape(TestCPparamA)[0]),np.abs(ErrorA), color = 'b')
 pae.set(ylabel='error [rad]')
 pae.set(xlabel='frame no.')
-pae.set_ylim([0, 0.1])
+pae.set_ylim([0, pi])
 pae.set_title('Err. Alpha')
 
 
@@ -447,7 +451,7 @@ ErrorB = np.asarray(TestGTparamB)-np.asarray(TestCPparamB)
 pbe.plot(np.arange(np.shape(TestCPparamB)[0]), np.abs(ErrorB), color = 'b')
 # py.set(ylabel='position [cm]')
 pbe.set(xlabel='frame no.')
-pbe.set_ylim([0, 0.1])
+pbe.set_ylim([0, pi])
 pbe.set_title('Err. Beta')
 
 # TestCPparamZ = RolAv(TestCPparamZ, window=10)
@@ -455,7 +459,7 @@ ErrorC = np.asarray(TestGTparamC)-np.asarray(TestCPparamC)
 pce.plot(np.arange(np.shape(TestCPparamC)[0]), np.abs(ErrorC), color = 'b')
 # pz.set(ylabel='position [cm]')
 pce.set(xlabel='frame no.')
-pce.set_ylim([0,0.1])
+pce.set_ylim([0,pi])
 pce.set_title('Err. Gamma')
 
 plt.show()

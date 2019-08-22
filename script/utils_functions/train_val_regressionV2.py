@@ -178,6 +178,7 @@ def train_regressionV2(model, train_dataloader, test_dataloader,
 
     p1.plot(np.arange(np.shape(moving_aves)[0]), moving_aves, label="step Loss rolling average")
     p1.set(ylabel='BCE Step Loss')
+    p1.set_yscale('log')
     p1.set(xlabel='Steps')
     p1.set_ylim([0, 4])
     p1.legend()  # Place a legend to the right of this smaller subplot.

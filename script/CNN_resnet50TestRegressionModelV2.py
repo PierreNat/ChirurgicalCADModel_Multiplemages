@@ -69,11 +69,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
 print(device)
 
-n_epochs = 7
-modelName = 'TranslationRegression_{}epoch_081319_TranslationRegression_TempModel_train_cubes_wrist1im_Head_10000datasetTranslationM15_15_5_7_4batchs_30epochs_Noise0.0_Regression'.format(n_epochs)
+n_epochs = '49'
+modelName = 'Ubelix_Lr0_001_20000_180Rt_50epoch_{}epoch_081819_Ubelix_Lr0_001_20000_180Rt_50epoch_Temp_train_cubes_wrist1im_Head_20000datasetRotationTranslation0_180_M_15_15_5_7_4batchs_50epochs_Regression'.format(n_epochs)
 
-file_name_extension = 'wrist1im_Head_1000img_sequence_Translation2'  # choose the corresponding database to use
-
+# file_name_extension = 'wrist1im_Head_1000img_sequence_Translation2'  # choose the corresponding database to use
+file_name_extension = 'wrist1im_Head_1000img_sequence_RotationTranslation180'  # choose the corresponding database to use
 batch_size = 4
 
 # a = np.array([1,2,3,4,5])
@@ -86,8 +86,8 @@ cubes_file = 'Npydatabase/cubes_{}.npy'.format(file_name_extension)
 silhouettes_file = 'Npydatabase/sils_{}.npy'.format(file_name_extension)
 parameters_file = 'Npydatabase/params_{}.npy'.format(file_name_extension)
 
-date4File = '080819' #mmddyy
-fileExtension = '{}_TEST_RegressionRotationTranslation_epoch{}_360deg'.format(date4File,n_epochs) #string to ad at the end of the file
+date4File = '081919' #mmddyy
+fileExtension = '{}_TEST_RegressionRotationTranslation_epoch{}180_2000img_50epoch'.format(date4File,n_epochs) #string to ad at the end of the file
 print(fileExtension)
 
 obj_name = 'wrist'

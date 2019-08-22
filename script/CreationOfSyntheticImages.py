@@ -48,9 +48,9 @@ def main():
     loop = tqdm.tqdm(range(0, nb_im))
     for i in loop:
         # define transfomration parameter randomly uniform
-        alpha = uniform(0, 180)
-        beta = uniform(0, 180)
-        gamma = uniform(0, 180)
+        alpha =0#uniform(0, 180)
+        beta = 0#uniform(0, 180)
+        gamma =  0 #uniform(0, 180)
         x = uniform(-1.5, 1.5)
         y = uniform(-1.5, 1.5)
         z = uniform(5, 7) #1000t was done with value between 7 and 10, Rot and trans between 5 10
@@ -106,16 +106,16 @@ def main():
 
         # cubes_database.extend(image)
 
-        # if(im_nr%1 == 0):
-        #     fig = plt.figure()
-        #     fig.add_subplot(2, 1, 1)
-        #     plt.imshow(image)
-        #     imageio.imwrite("3D_objects/{}_ref.png".format(file_name_extension), image)
-        #
-        #     fig.add_subplot(2, 1, 2)
-        #     plt.imshow(sil, cmap='gray')
-        #     plt.show()
-        #     plt.close(fig)
+        if(im_nr%1 == 0):
+            fig = plt.figure()
+            fig.add_subplot(2, 1, 1)
+            plt.imshow(image)
+            imageio.imwrite("3D_objects/{}_ref.png".format(file_name_extension), image)
+
+            fig.add_subplot(2, 1, 2)
+            plt.imshow(sil, cmap='gray')
+            plt.show()
+            plt.close(fig)
 
 # save database
 # reshape in the form (nbr of image, x dim, y dim, layers)
